@@ -28,7 +28,14 @@ db.on('populate', async () => {
   await db.tipoIdentificacion.bulkAdd([
     { nombre: 'Cédula de Ciudadanía' },
     { nombre: 'NIT' },
-    { nombre: 'Pasaporte' }
+    { nombre: 'Pasaporte' },
+    { nombre: 'Tarjeta de Identidad' },
+    { nombre: 'Cédula de Extranjería' },
+    { nombre: 'Registro Civil' },
+    { nombre: 'RUT' },
+    { nombre: 'Permiso Especial Permanente' },
+    { nombre: 'Documento Extranjero' },
+    { nombre: 'Carnet Diplomático' }
   ]);
   
   await db.tipoPersona.bulkAdd([
@@ -41,7 +48,12 @@ db.on('populate', async () => {
     { nombre: 'Antioquia' },
     { nombre: 'Nariño' },
     { nombre: 'Cauca' },
-    { nombre: 'Quindío' }
+    { nombre: 'Quindío' },
+    { nombre: 'Cundinamarca' },
+    { nombre: 'Atlántico' },
+    { nombre: 'Bolívar' },
+    { nombre: 'Santander' },
+    { nombre: 'Risaralda' }
   ]);
   
   await db.ciudad.bulkAdd([
@@ -53,7 +65,12 @@ db.on('populate', async () => {
     { nombre: 'Pasto', id_departamento: 3 },
     { nombre: 'Popayán', id_departamento: 4 },
     { nombre: 'Armenia', id_departamento: 5 },
-    { nombre: 'Ipiales', id_departamento: 3 }
+    { nombre: 'Ipiales', id_departamento: 3 },
+    { nombre: 'Bogotá', id_departamento: 6 },
+    { nombre: 'Barranquilla', id_departamento: 7 },
+    { nombre: 'Cartagena', id_departamento: 8 },
+    { nombre: 'Bucaramanga', id_departamento: 9 },
+    { nombre: 'Pereira', id_departamento: 10 }
   ]);
 
   await db.planComercial.bulkAdd([
@@ -62,6 +79,11 @@ db.on('populate', async () => {
     { nombre: 'Plata', descripcion: 'Plan avanzado' },
     { nombre: 'Platino', descripcion: 'Plan premium' },
     { nombre: 'Premium', descripcion: 'Plan ultra' },
+    { nombre: 'Corporativo Pyme', descripcion: 'Para empresas pequeñas' },
+    { nombre: 'Corporativo Plus', descripcion: 'Para medianas empresas' },
+    { nombre: 'Empresarial Global', descripcion: 'Para grandes compañías' },
+    { nombre: 'Vip Diamante', descripcion: 'Máxima exclusividad' },
+    { nombre: 'Fibra Óptica Max', descripcion: 'Plan especial velocidad' }
   ]);
   
   await db.actividadEconomica.bulkAdd([
@@ -69,7 +91,12 @@ db.on('populate', async () => {
     { nombre: 'Restaurante', descripcion: 'Requieren conectividad estable para facturación (POS)' },
     { nombre: 'Bares', descripcion: 'Consumo alto por streaming' },
     { nombre: 'Hospital / Salud', descripcion: 'Actividad de misión crítica' },
-    { nombre: 'Universidad / Educación', descripcion: 'Densidad alta de usuarios' }
+    { nombre: 'Universidad / Educación', descripcion: 'Densidad alta de usuarios' },
+    { nombre: 'Hotelería', descripcion: 'Flujo constante de red y TVs' },
+    { nombre: 'Centro Comercial', descripcion: 'Cobertura masiva de áreas' },
+    { nombre: 'Banca y Finanzas', descripcion: 'Máxima prioridad de seguridad de datos' },
+    { nombre: 'Gobierno', descripcion: 'Servicios para alcaldías o gobernaciones' },
+    { nombre: 'Call Center', descripcion: 'Altísimo consumo de banda ancha simétrica' }
   ]);
 
   await db.calificacionFinanciera.bulkAdd([
@@ -77,7 +104,12 @@ db.on('populate', async () => {
     { nombre: 'Bueno', descripcion: 'Pagos puntuales, demoras leves' },
     { nombre: 'Regular', descripcion: 'Demoras tolerables' },
     { nombre: 'Malo', descripcion: 'Demora superior a 30 días' },
-    { nombre: 'Pésimo', descripcion: 'Deuda superior a 60 días' }
+    { nombre: 'Pésimo', descripcion: 'Deuda superior a 60 días' },
+    { nombre: 'AAA+', descripcion: 'Cliente VIP intachable histórico' },
+    { nombre: 'Riesgo Moderado', descripcion: 'Demoras esporádicas de una semana' },
+    { nombre: 'Riesgo Alto', descripcion: 'Ha tenido suspensiones de servicio' },
+    { nombre: 'Cartera Castigada', descripcion: 'Deuda irrecuperable' },
+    { nombre: 'En Cobro Jurídico', descripcion: 'Proceso judicial activo' }
   ]);
 
   // --- ENTIDADES PRINCIPALES Y RELACIONES ---
@@ -90,29 +122,31 @@ db.on('populate', async () => {
     { nombre: 'Fidelización Universidades', descripcion: 'Aplica a sede Valle', porcentaje_descuento: 40, facturacion_min: 500000, facturacion_max: null },
     { nombre: 'VIP Hospitalario', descripcion: 'Solo hospitales excelentes', porcentaje_descuento: 60, facturacion_min: 100000, facturacion_max: null },
     { nombre: 'Reactivación Jamundí', descripcion: 'Descuento alto para Jamundí', porcentaje_descuento: 30, facturacion_min: 0, facturacion_max: null },
-    { nombre: 'Empate Antiguedad', descripcion: 'Empata con Cali 20%, pero es mas vieja', porcentaje_descuento: 20, facturacion_min: 0, facturacion_max: null }
+    { nombre: 'Empate Antiguedad', descripcion: 'Empata con Cali 20%, pero es mas vieja', porcentaje_descuento: 20, facturacion_min: 0, facturacion_max: null },
+    { nombre: 'Retención Preferencial', descripcion: 'Evita cancelaciones por competencia', porcentaje_descuento: 35, facturacion_min: 50000, facturacion_max: null }
   ]);
 
   await db.vigenciaPromocion.bulkAdd([
     { id_promocion: 1, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
     { id_promocion: 2, fecha_inicio: '2026-02-01', fecha_fin: '2026-02-28' },
     { id_promocion: 3, fecha_inicio: '2025-11-15', fecha_fin: '2026-05-15' },
-    { id_promocion: 4, fecha_inicio: '2026-01-01', fecha_fin: '2026-01-31' },
+    { id_promocion: 4, fecha_inicio: '2026-01-01', fecha_fin: '2026-01-31' }, // ID 4  - Histórica Expira 
     { id_promocion: 5, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
     { id_promocion: 6, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
     { id_promocion: 7, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
     { id_promocion: 8, fecha_inicio: '2026-03-01', fecha_fin: '2026-06-30' },
     { id_promocion: 9, fecha_inicio: '2025-01-01', fecha_fin: '2026-12-31' },
-    { id_promocion: 4, fecha_inicio: '2026-02-01', fecha_fin: '2026-02-28' },
-    { id_promocion: 4, fecha_inicio: '2026-03-01', fecha_fin: '2026-03-31' },
+    { id_promocion: 4, fecha_inicio: '2026-02-01', fecha_fin: '2026-02-28' }, // ID 10 - Histórica Expira
+    // ELIMINADA: { id_promocion: 4, fecha_inicio: '2026-03-01', fecha_fin: '2026-03-31' } para evitar la Vigencia Activa de esta Promo confusa
     { id_promocion: 1, fecha_inicio: '2027-01-01', fecha_fin: '2027-12-31' },
     { id_promocion: 2, fecha_inicio: '2027-05-01', fecha_fin: '2027-10-31' },
-    { id_promocion: 5, fecha_inicio: '2028-01-01', fecha_fin: '2028-06-30' }
+    { id_promocion: 5, fecha_inicio: '2028-01-01', fecha_fin: '2028-06-30' },
+    { id_promocion: 10, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' }
   ]);
 
   await db.cliente.bulkAdd([
-    { identificacion: '16780443', nombre: 'David Jiménez Garzón', celular: '3000000000', direccion: 'Calle 1', promedio_facturacion: 155000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 1, id_calificacion_financiera: 1, id_tipo_identificacion: 1 },
-    { identificacion: '31225890', nombre: 'Clínica Bejarano', celular: '3100000000', direccion: 'Calle 2', promedio_facturacion: 88500, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 8, id_plan_comercial: 3, id_actividad_economica: 4, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
+    { identificacion: '16780443', nombre: 'David Jiménez Garzón', celular: '3000000000', direccion: 'Calle 1', promedio_facturacion: 155000, saldo_vencido: 35000, id_tipo_persona: 1, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 1, id_calificacion_financiera: 1, id_tipo_identificacion: 1 },
+    { identificacion: '31225890', nombre: 'Clínica Bejarano', celular: '3100000000', direccion: 'Calle 2', promedio_facturacion: 88500, saldo_vencido: 8000, id_tipo_persona: 2, id_ciudad: 8, id_plan_comercial: 3, id_actividad_economica: 4, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
     { identificacion: '1061841698', nombre: 'La Cosecha', celular: '3200000000', direccion: 'Calle 3', promedio_facturacion: 85000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 1, id_actividad_economica: 2, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
     { identificacion: '94332110', nombre: 'Juan Diego Posada', celular: '3150000000', direccion: 'Carrera 4', promedio_facturacion: 125000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 5, id_plan_comercial: 4, id_actividad_economica: 1, id_calificacion_financiera: 2, id_tipo_identificacion: 1 },
     { identificacion: '16998001', nombre: 'El Contentoso', celular: '3120000000', direccion: 'Avenida 5', promedio_facturacion: 98000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 4, id_plan_comercial: 3, id_actividad_economica: 3, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
@@ -125,9 +159,9 @@ db.on('populate', async () => {
     { identificacion: '11223344', nombre: 'Carlos Ruiz', celular: '3109998877', direccion: 'Cra 12 #4', promedio_facturacion: 30000, saldo_vencido: 50000, id_tipo_persona: 1, id_ciudad: 1, id_plan_comercial: 1, id_actividad_economica: 1, id_calificacion_financiera: 4, id_tipo_identificacion: 1 },
     { identificacion: '55667788', nombre: 'Hospital San Juan', celular: '3205556677', direccion: 'Calle 100', promedio_facturacion: 500000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 4, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
     { identificacion: '99887766', nombre: 'Universidad del Valle', celular: '3101234567', direccion: 'Sede Melendez', promedio_facturacion: 1200000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 5, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
-    { identificacion: '10101010', nombre: 'Bar La Esquina', celular: '3009876543', direccion: 'Zona Rosa', promedio_facturacion: 95000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 4, id_plan_comercial: 3, id_actividad_economica: 3, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
+    { identificacion: '10101010', nombre: 'Bar La Esquina', celular: '3009876543', direccion: 'Zona Rosa', promedio_facturacion: 95000, saldo_vencido: 45000, id_tipo_persona: 2, id_ciudad: 4, id_plan_comercial: 3, id_actividad_economica: 3, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
     { identificacion: '20202020', nombre: 'Marcia Velez', celular: '3112223344', direccion: 'Barrio Obrero', promedio_facturacion: 45000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 4, id_plan_comercial: 1, id_actividad_economica: 1, id_calificacion_financiera: 3, id_tipo_identificacion: 1 },
-    { identificacion: '30303030', nombre: 'Restaurante El Sabor', celular: '3156667788', direccion: 'Centro', promedio_facturacion: 110000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 4, id_actividad_economica: 2, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
+    { identificacion: '30303030', nombre: 'Restaurante El Sabor', celular: '3156667788', direccion: 'Centro', promedio_facturacion: 110000, saldo_vencido: 120000, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 4, id_actividad_economica: 2, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
     { identificacion: '40404040', nombre: 'Fernando Gomez', celular: '3201112233', direccion: 'Cra 5', promedio_facturacion: 75000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 5, id_plan_comercial: 2, id_actividad_economica: 1, id_calificacion_financiera: 2, id_tipo_identificacion: 1 },
     { identificacion: '50505050', nombre: 'Diana Rojas', celular: '3104445566', direccion: 'Calle 10', promedio_facturacion: 150000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 8, id_plan_comercial: 5, id_actividad_economica: 1, id_calificacion_financiera: 1, id_tipo_identificacion: 1 }
   ]);
@@ -165,7 +199,16 @@ db.on('populate', async () => {
      { id_cliente: 15, id_vigencia_promocion: 4, fecha_asignacion: '2026-01-15' }, // Bar La Esquina
      { id_cliente: 15, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' },
      { id_cliente: 17, id_vigencia_promocion: 4, fecha_asignacion: '2026-01-15' }, // Restaurante El Sabor
-     { id_cliente: 17, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' }
+     { id_cliente: 17, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' },
+     // MAS REGISTROS SOLICITADOS (minimo 10 en cada tabla)
+     { id_cliente: 1, id_vigencia_promocion: 1, fecha_asignacion: '2026-01-15' },
+     { id_cliente: 2, id_vigencia_promocion: 5, fecha_asignacion: '2026-02-10' },
+     { id_cliente: 9, id_vigencia_promocion: 5, fecha_asignacion: '2026-02-10' },
+     { id_cliente: 3, id_vigencia_promocion: 6, fecha_asignacion: '2026-01-20' },
+     { id_cliente: 7, id_vigencia_promocion: 9, fecha_asignacion: '2025-05-15' },
+     { id_cliente: 8, id_vigencia_promocion: 1, fecha_asignacion: '2026-01-15' },
+     { id_cliente: 6, id_vigencia_promocion: 2, fecha_asignacion: '2026-02-12' },
+     { id_cliente: 13, id_vigencia_promocion: 7, fecha_asignacion: '2026-01-18' }
   ]);
   } catch (err) {
     console.error('Error poblando base de datos Dexie:', err);

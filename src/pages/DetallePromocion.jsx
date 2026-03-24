@@ -127,7 +127,7 @@ export default function DetallePromocion() {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {namesPlanes.length > 0 ? namesPlanes.map((n, i) => (
                 <span key={i} className="badge" style={{ background: '#F0F5FA', color: '#212B33', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem', border: '1px solid #EAEAEA' }}>{n}</span>
-              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Ninguno definido</span>}
+              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Aplica para todos</span>}
             </div>
           </div>
           <div>
@@ -135,7 +135,7 @@ export default function DetallePromocion() {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {namesCiudades.length > 0 ? namesCiudades.map((n, i) => (
                 <span key={i} className="badge" style={{ background: '#F0F5FA', color: '#212B33', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem', border: '1px solid #EAEAEA' }}>{n}</span>
-              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Cualquiera</span>}
+              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Aplica para todas</span>}
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function DetallePromocion() {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {namesActs.length > 0 ? namesActs.map((n, i) => (
                 <span key={i} className="badge" style={{ background: '#F0F5FA', color: '#212B33', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem', border: '1px solid #EAEAEA' }}>{n}</span>
-              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Cualquiera</span>}
+              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Aplica para todas</span>}
             </div>
           </div>
           <div>
@@ -154,7 +154,7 @@ export default function DetallePromocion() {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {namesCalifs.length > 0 ? namesCalifs.map((n, i) => (
                 <span key={i} className="badge" style={{ background: '#F0F5FA', color: '#212B33', padding: '0.5rem 0.75rem', borderRadius: '4px', fontSize: '0.875rem', border: '1px solid #EAEAEA' }}>{n}</span>
-              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Cualquiera</span>}
+              )) : <span style={{ color: '#66737D', fontSize: '0.875rem' }}>Aplica para todas</span>}
             </div>
           </div>
         </div>

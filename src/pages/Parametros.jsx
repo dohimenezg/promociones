@@ -8,7 +8,7 @@ import { db } from '../services/db';
 export default function Parametros() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.tab || 'calificacion'); // plan, actividad, calificacion
+  const [activeTab, setActiveTab] = useState(location.state?.tab || 'plan'); // plan, actividad, calificacion
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState('id_asc');

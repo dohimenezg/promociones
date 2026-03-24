@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import BackButton from '../components/BackButton';
+import AlertModal from '../components/AlertModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -12,6 +13,7 @@ export default function EditarVigencia() {
   const promocionesDB = useLiveQuery(() => db.promocion.toArray()) || [];
   const [vigencia, setVigencia] = useState(null);
   const [selectedPromoId, setSelectedPromoId] = useState('');
+  const [alert, setAlert] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
   useEffect(() => {
     if (id_vigencia) {
@@ -32,7 +34,12 @@ export default function EditarVigencia() {
     const data = Object.fromEntries(fd.entries());
 
     if (!data.id_promocion || !data.fecha_inicio || !data.fecha_fin) {
-      alert('Todos los campos son obligatorios.');
+      setAlert({ isOpen: true, title: 'Datos Incompletos', message: 'Todos los campos son obligatorios.', type: 'error' });
+      return;
+    }
+
+    if (new Date(data.fecha_fin) < new Date(data.fecha_inicio)) {
+      setAlert({ isOpen: true, title: 'Fechas Inválidas', message: 'La fecha de finalización no puede ser menor a la fecha de inicio.', type: 'error' });
       return;
     }
 
@@ -42,11 +49,19 @@ export default function EditarVigencia() {
         fecha_inicio: data.fecha_inicio,
         fecha_fin: data.fecha_fin
       });
-      alert('Vigencia actualizada exitosamente.');
-      navigate('/promociones', { state: { tab: 'vigencias' } });
+      setAlert({ 
+        isOpen: true, 
+        title: 'Actualización Exitosa', 
+        message: 'Vigencia actualizada exitosamente. Serás redirigido a la lista de vigencias.', 
+        type: 'success', 
+        onClose: () => {
+          setAlert({ ...alert, isOpen: false });
+          navigate('/promociones', { state: { tab: 'vigencias' } });
+        }
+      });
     } catch (err) {
       console.error(err);
-      alert('Hubo un error al actualizar la vigencia.');
+      setAlert({ isOpen: true, title: 'Error interno', message: 'Hubo un error al actualizar la vigencia.', type: 'error' });
     }
   };
 
@@ -57,9 +72,11 @@ export default function EditarVigencia() {
       <BackButton fallbackPath='/promociones' fallbackState={{ tab: 'vigencias' }} title="Edición de Vigencia" />
 
       <div className="card" style={{ padding: '2rem' }}>
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <form onSubmit={handleUpdate}>
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label className="form-label">Promoción Seleccionada</label>
+            <label className="form-label">Promoción Seleccionada*</label>
             <select 
               className="form-control" 
               name="id_promocion"
@@ -86,11 +103,11 @@ export default function EditarVigencia() {
 
           <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label">Fecha de Inicio</label>
+              <label className="form-label">Fecha de Inicio*</label>
               <input type="date" className="form-control" name="fecha_inicio" defaultValue={vigencia.fecha_inicio} required />
             </div>
             <div className="form-group">
-              <label className="form-label">Fecha de Finalización</label>
+              <label className="form-label">Fecha de Finalización*</label>
               <input type="date" className="form-control" name="fecha_fin" defaultValue={vigencia.fecha_fin} required />
             </div>
           </div>
@@ -105,6 +122,17 @@ export default function EditarVigencia() {
           </div>
         </form>
       </div>
+
+      <AlertModal 
+        isOpen={alert.isOpen} 
+        title={alert.title} 
+        message={alert.message} 
+        type={alert.type} 
+        onClose={() => {
+          if (alert.onClose) alert.onClose();
+          else setAlert({ ...alert, isOpen: false });
+        }}
+      />
     </div>
   );
 }

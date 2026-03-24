@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { ChevronLeft, PlusCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import AlertModal from '../components/AlertModal';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 
 export default function RegistrarVigencia() {
   const navigate = useNavigate();
   const promocionesDB = useLiveQuery(() => db.promocion.toArray()) || [];
-  const [selectedPromoId, setSelectedPromoId] = useState('');
+  const location = useLocation();
+  const [selectedPromoId, setSelectedPromoId] = useState(location.state?.id_promocion || '');
+  const [alert, setAlert] = useState({ isOpen: false, title: '', message: '', type: 'info' });
 
   const selectedPromo = promocionesDB.find(p => p.id_promocion === Number(selectedPromoId));
 
@@ -17,7 +20,12 @@ export default function RegistrarVigencia() {
     const data = Object.fromEntries(fd.entries());
 
     if (!data.id_promocion || !data.fecha_inicio || !data.fecha_fin) {
-      alert('Todos los campos son obligatorios.');
+      setAlert({ isOpen: true, title: 'Datos Incompletos', message: 'Todos los campos son obligatorios.', type: 'error' });
+      return;
+    }
+
+    if (new Date(data.fecha_fin) < new Date(data.fecha_inicio)) {
+      setAlert({ isOpen: true, title: 'Fechas Inválidas', message: 'La fecha de finalización no puede ser menor a la fecha de inicio.', type: 'error' });
       return;
     }
 
@@ -27,11 +35,19 @@ export default function RegistrarVigencia() {
         fecha_inicio: data.fecha_inicio,
         fecha_fin: data.fecha_fin
       });
-      alert('Vigencia registrada exitosamente.');
-      navigate('/promociones', { state: { tab: 'vigencias' } });
+      setAlert({ 
+        isOpen: true, 
+        title: 'Registro Exitoso', 
+        message: 'Vigencia registrada exitosamente. Serás redirigido a la lista de vigencias.', 
+        type: 'success', 
+        onClose: () => {
+          setAlert({ ...alert, isOpen: false });
+          navigate('/promociones', { state: { tab: 'vigencias' } });
+        }
+      });
     } catch (err) {
       console.error(err);
-      alert('Hubo un error al guardar la vigencia.');
+      setAlert({ isOpen: true, title: 'Error interno', message: 'Hubo un error al guardar la vigencia.', type: 'error' });
     }
   };
 
@@ -54,9 +70,11 @@ export default function RegistrarVigencia() {
       <h1 className="page-title" style={{ marginBottom: '2rem' }}>Registrar Vigencia de Promoción</h1>
 
       <div className="card" style={{ padding: '2rem' }}>
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <form onSubmit={handleSave}>
           <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-            <label className="form-label">Seleccionar Promoción Existente</label>
+            <label className="form-label">Seleccionar Promoción Existente*</label>
             <select 
               className="form-control" 
               name="id_promocion"
@@ -83,11 +101,11 @@ export default function RegistrarVigencia() {
 
           <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label">Fecha de Inicio</label>
+              <label className="form-label">Fecha de Inicio*</label>
               <input type="date" className="form-control" name="fecha_inicio" required />
             </div>
             <div className="form-group">
-              <label className="form-label">Fecha de Finalización</label>
+              <label className="form-label">Fecha de Finalización*</label>
               <input type="date" className="form-control" name="fecha_fin" required />
             </div>
           </div>
@@ -102,6 +120,17 @@ export default function RegistrarVigencia() {
           </div>
         </form>
       </div>
+
+      <AlertModal 
+        isOpen={alert.isOpen} 
+        title={alert.title} 
+        message={alert.message} 
+        type={alert.type} 
+        onClose={() => {
+          if (alert.onClose) alert.onClose();
+          else setAlert({ ...alert, isOpen: false });
+        }}
+      />
     </div>
   );
 }

@@ -70,14 +70,16 @@ export default function EditarCliente() {
     <div style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '1rem' }}>
       <BackButton fallbackPath='/clientes' fallbackState={null} title="Edición de Cliente" />
 
-      <form onSubmit={handleUpdate}>
+      
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
+        <form onSubmit={handleUpdate}>
       <div className="grid-3" style={{ marginBottom: '2rem' }}>
         {/* INFO PERSONAL */}
         <div className="card">
           <h4 style={{ fontSize: '0.8rem', color: '#66737D', letterSpacing: '0.5px', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem', marginBottom: '1rem' }}>INFORMACIÓN PERSONAL</h4>
           
           <div className="form-group">
-            <label className="form-label">Tipo de Persona</label>
+            <label className="form-label">Tipo de Persona*</label>
             <select 
               className="form-control" 
               name="id_tipo_persona"
@@ -90,7 +92,7 @@ export default function EditarCliente() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Tipo de Identificación</label>
+            <label className="form-label">Tipo de Identificación*</label>
             <select className="form-control" name="id_tipo_identificacion" defaultValue={cliente.id_tipo_identificacion} required>
               <option value="">Seleccione...</option>
               {tiposIdentDB.map(t => <option key={t.id_tipo_identificacion} value={t.id_tipo_identificacion}>{t.nombre}</option>)}
@@ -121,14 +123,14 @@ export default function EditarCliente() {
         <div className="card">
           <h4 style={{ fontSize: '0.8rem', color: '#66737D', letterSpacing: '0.5px', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem', marginBottom: '1rem' }}>PERFIL COMERCIAL</h4>
           <div className="form-group">
-            <label className="form-label">Plan Comercial</label>
+            <label className="form-label">Plan Comercial*</label>
             <select className="form-control" name="id_plan_comercial" defaultValue={cliente.id_plan_comercial} required>
               <option value="">Seleccione...</option>
               {planesDB.map(p => <option key={p.id_plan_comercial} value={p.id_plan_comercial}>{p.nombre}</option>)}
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Ubicación (Ciudad y Departamento)</label>
+            <label className="form-label">Ubicación (Ciudad y Departamento)*</label>
             <select className="form-control" name="id_ciudad" defaultValue={cliente.id_ciudad} required>
               <option value="">Seleccione...</option>
               {ciudadesDB.map(c => {
@@ -139,7 +141,7 @@ export default function EditarCliente() {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Actividad Económica</label>
+            <label className="form-label">Actividad Económica*</label>
             <select className="form-control" name="id_actividad_economica" defaultValue={cliente.id_actividad_economica} required>
               <option value="">Seleccione...</option>
               {actsDB.map(a => <option key={a.id_actividad_economica} value={a.id_actividad_economica}>{a.nombre}</option>)}
@@ -151,15 +153,15 @@ export default function EditarCliente() {
         <div className="card">
           <h4 style={{ fontSize: '0.8rem', color: '#66737D', letterSpacing: '0.5px', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem', marginBottom: '1rem' }}>ESTADO FINANCIERO</h4>
           <div className="form-group">
-            <label className="form-label">Factura Promedio</label>
+            <label className="form-label">Factura Promedio*</label>
             <input type="number" className="form-control" name="promedio_facturacion" defaultValue={cliente.promedio_facturacion} required />
           </div>
           <div className="form-group">
-            <label className="form-label">Saldo Vencido</label>
+            <label className="form-label">Saldo Vencido*</label>
             <input type="number" className="form-control" name="saldo_vencido" defaultValue={cliente.saldo_vencido} required />
           </div>
           <div className="form-group">
-            <label className="form-label">Calificación Financiera</label>
+            <label className="form-label">Calificación Financiera*</label>
             <select className="form-control" name="id_calificacion_financiera" defaultValue={cliente.id_calificacion_financiera} required>
               <option value="">Seleccione...</option>
               {califsDB.map(c => <option key={c.id_calificacion_financiera} value={c.id_calificacion_financiera}>{c.nombre}</option>)}

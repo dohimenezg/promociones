@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import BackButton from '../components/BackButton';
+import AlertModal from '../components/AlertModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -56,6 +57,8 @@ export default function EditarPromocion() {
   const navigate = useNavigate();
   const location = useLocation();
   const id_promocion = location.state?.id_promocion;
+
+  const [alert, setAlert] = useState({ isOpen: false, title: '', message: '', type: 'info', redirectId: null });
 
   const [nombre, setNombre] = useState('');
   const [descuento, setDescuento] = useState('');
@@ -131,9 +134,33 @@ export default function EditarPromocion() {
   const ALL_CALIFICACIONES = califsDB.map(c => ({ id: c.id_calificacion_financiera, nombre: c.nombre }));
 
   const handleUpdate = async () => {
-    if (!nombre || !descuento) {
-      alert('Nombre y Porcentaje de Descuento son obligatorios.');
+    if (!nombre || !descuento || !desc) {
+      setAlert({ isOpen: true, title: 'Datos Incompletos', message: 'El nombre, descripción y el porcentaje de descuento son obligatorios.', type: 'error' });
       return;
+    }
+
+    const valDescuento = Number(descuento);
+    if (valDescuento <= 0 || valDescuento > 100) {
+      setAlert({ isOpen: true, title: 'Valor Inválido', message: 'El porcentaje de descuento debe ser mayor a 0 y máximo 100.', type: 'error' });
+      return;
+    }
+
+    const valMin = minFact ? Number(minFact) : 0;
+    if (valMin < 0) {
+      setAlert({ isOpen: true, title: 'Valor Inválido', message: 'La facturación mínima no puede ser negativa.', type: 'error' });
+      return;
+    }
+
+    if (maxFact) {
+      const valMax = Number(maxFact);
+      if (valMax < 0) {
+        setAlert({ isOpen: true, title: 'Valor Inválido', message: 'La facturación máxima no puede ser negativa.', type: 'error' });
+        return;
+      }
+      if (valMax < valMin) {
+        setAlert({ isOpen: true, title: 'Valor Inválido', message: 'La facturación máxima debe ser mayor o igual a la mínima.', type: 'error' });
+        return;
+      }
     }
     
     // Update promotion
@@ -166,8 +193,13 @@ export default function EditarPromocion() {
       await db.promocionAdmiteActividadEconomica.bulkAdd(selectedActividades.map(id => ({ id_actividad_economica: id, id_promocion: id_promocion, limite_anual: null })));
     }
 
-    alert('Promoción actualizada exitosamente.');
-    navigate('/promociones', { state: { tab: 'promociones' } });
+    setAlert({ 
+      isOpen: true, 
+      title: 'Actualización Exitosa', 
+      message: 'Promoción actualizada exitosamente. Serás redirigido a gestionar su historial de vigencias.', 
+      type: 'success',
+      redirectId: id_promocion
+    });
   };
 
   if (!id_promocion) {
@@ -181,22 +213,26 @@ export default function EditarPromocion() {
       <div className="card">
         <h3 style={{ marginBottom: '1.5rem', color: '#212B33' }}>Información General</h3>
         
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div className="form-group">
-            <label className="form-label">Nombre de la Promoción</label>
+            <label className="form-label">Nombre de la Promoción*</label>
             <input type="text" className="form-control" value={nombre} onChange={e => setNombre(e.target.value)} />
           </div>
           <div className="form-group">
-            <label className="form-label">Porcentaje de Descuento (%)</label>
+            <label className="form-label">Porcentaje de Descuento (%)*</label>
             <input type="number" className="form-control" value={descuento} onChange={e => setDescuento(e.target.value)} />
           </div>
         </div>
 
         <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-          <label className="form-label">Descripción Comercial</label>
+          <label className="form-label">Descripción Comercial*</label>
           <input type="text" className="form-control" value={desc} onChange={e => setDesc(e.target.value)} />
         </div>
 
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2">
           <div className="form-group">
             <label className="form-label">Facturación Mínima Requerida</label>
@@ -215,10 +251,14 @@ export default function EditarPromocion() {
           El cliente debe cumplir <strong>TODOS</strong> los criterios seleccionados para recibir la promoción.
         </p>
 
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <FilterGroup title="Planes Comerciales Admitidos" items={ALL_PLANES} selectedItems={selectedPlanes} setSelectedItems={setSelectedPlanes} allowAll={allowAllPlanes} setAllowAll={setAllowAllPlanes} />
           <FilterGroup title="Ciudades Admitidas" items={ALL_CIUDADES} selectedItems={selectedCiudades} setSelectedItems={setSelectedCiudades} allowAll={allowAllCiudades} setAllowAll={setAllowAllCiudades} />
         </div>
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2">
           <FilterGroup title="Actividades Económicas Admitidas" items={ALL_ACTIVIDADES} selectedItems={selectedActividades} setSelectedItems={setSelectedActividades} allowAll={allowAllActividades} setAllowAll={setAllowAllActividades} />
           <FilterGroup title="Calificaciones Financieras Admitidas" items={ALL_CALIFICACIONES} selectedItems={selectedCalificaciones} setSelectedItems={setSelectedCalificaciones} allowAll={allowAllCalificaciones} setAllowAll={setAllowAllCalificaciones} />
@@ -229,6 +269,19 @@ export default function EditarPromocion() {
         <button className="btn-secondary" onClick={() => navigate('/promociones', { state: { tab: 'promociones' } })}>Cancelar</button>
         <button className="btn-primary" onClick={handleUpdate}>Guardar Cambios</button>
       </div>
+
+      <AlertModal 
+        isOpen={alert.isOpen} 
+        title={alert.title} 
+        message={alert.message} 
+        type={alert.type} 
+        onClose={() => {
+          setAlert(prev => ({ ...prev, isOpen: false }));
+          if (alert.type === 'success' && alert.redirectId) {
+            navigate('/promociones/registrar-vigencia', { state: { id_promocion: alert.redirectId } });
+          }
+        }}
+      />
     </div>
   );
 }

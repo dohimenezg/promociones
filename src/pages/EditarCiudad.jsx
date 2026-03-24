@@ -39,9 +39,11 @@ export default function EditarCiudad() {
       <div className="card" style={{ padding: '2rem' }}>
         <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: '#000', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem' }}>Información</h3>
         
+        
+        <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <form onSubmit={handleUpdate}>
           <div className="form-group">
-            <label className="form-label">Departamento</label>
+            <label className="form-label">Departamento*</label>
             <select className="form-control" name="id_departamento" defaultValue={item.id_departamento} required>
               <option value="">Seleccione...</option>
               {deptosDB.map(d => (
@@ -50,7 +52,7 @@ export default function EditarCiudad() {
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Ciudad</label>
+            <label className="form-label">Ciudad*</label>
             <input type="text" className="form-control" name="nombre" defaultValue={item.nombre} required />
           </div>
 

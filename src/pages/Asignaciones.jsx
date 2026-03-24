@@ -26,7 +26,7 @@ export default function Asignaciones() {
   const ejecutarAsignaciones = async () => {
     // DO NOT clear db.clienteAplicaPromocion.
     const asignacionesAnteriores = await db.clienteAplicaPromocion.toArray();
-    
+
     const clientes = await db.cliente.toArray();
     const vigencias = await db.vigenciaPromocion.toArray();
     const promociones = await db.promocion.toArray();
@@ -34,25 +34,38 @@ export default function Asignaciones() {
     const pPlanes = await db.promocionAdmitePlanComercial.toArray();
     const pCalifs = await db.promocionAdmiteCalificacionFinanciera.toArray();
     const pActs = await db.promocionAdmiteActividadEconomica.toArray();
-    
+
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
     const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
     const nuevasAsignaciones = [];
 
     // Helper to get times assigned in year
     const timesAssignedInYear = (idCliente, idPromocion) => {
-       return asignacionesAnteriores.filter(a => {
-          if (a.id_cliente !== idCliente) return false;
-          const v = vigencias.find(v => v.id_vigencia_promocion === a.id_vigencia_promocion);
-          if (!v || v.id_promocion !== idPromocion) return false;
-          const aYear = new Date(a.fecha_asignacion).getFullYear();
-          return aYear === currentYear;
-       }).length;
+      return asignacionesAnteriores.filter(a => {
+        if (a.id_cliente !== idCliente) return false;
+        const v = vigencias.find(v => v.id_vigencia_promocion === a.id_vigencia_promocion);
+        if (!v || v.id_promocion !== idPromocion) return false;
+        const aYear = new Date(a.fecha_asignacion).getFullYear();
+        return aYear === currentYear;
+      }).length;
+    };
+
+    // Helper to check if client already got a promo this month
+    const hasAssignmentThisMonth = (idCliente) => {
+      return asignacionesAnteriores.some(a => {
+        if (a.id_cliente !== idCliente) return false;
+        // La fecha_asignacion ya viene en formato guardado YYYY-MM-DD
+        const aYear = new Date(a.fecha_asignacion + 'T00:00:00').getFullYear();
+        const aMonth = new Date(a.fecha_asignacion + 'T00:00:00').getMonth();
+        return aYear === currentYear && aMonth === currentMonth;
+      });
     };
 
     for (const cli of clientes) {
       if (cli.saldo_vencido > 0) continue; // Rule: Must be 'al día'
+      if (hasAssignmentThisMonth(cli.id_cliente)) continue; // Rule: Only 1 promo per month
 
       let candidateVigencias = [];
 
@@ -63,7 +76,7 @@ export default function Asignaciones() {
 
         const start = new Date(vig.fecha_inicio + 'T00:00:00');
         const end = new Date(vig.fecha_fin + 'T00:00:00');
-        end.setHours(23, 59, 59); 
+        end.setHours(23, 59, 59);
 
         if (today >= start && today <= end) {
           const promo = promociones.find(p => p.id_promocion === vig.id_promocion);
@@ -73,7 +86,7 @@ export default function Asignaciones() {
           const reqCiudades = pCiudades.filter(p => p.id_promocion === promo.id_promocion).map(p => p.id_ciudad);
           const reqPlanes = pPlanes.filter(p => p.id_promocion === promo.id_promocion).map(p => p.id_plan_comercial);
           const reqCalifs = pCalifs.filter(p => p.id_promocion === promo.id_promocion).map(p => p.id_calificacion_financiera);
-          
+
           const ruleActs = pActs.filter(p => p.id_promocion === promo.id_promocion);
           const reqActs = ruleActs.map(p => p.id_actividad_economica);
 
@@ -86,19 +99,19 @@ export default function Asignaciones() {
           const validMaxFact = !promo.facturacion_max || cli.promedio_facturacion <= promo.facturacion_max;
 
           if (validCiudad && validPlan && validCalif && validAct && validMinFact && validMaxFact) {
-            
+
             // Check annual limit rule based on activity
             const activityRule = ruleActs.find(r => r.id_actividad_economica === cli.id_actividad_economica);
             let limitValid = true;
             if (activityRule && activityRule.limite_anual !== null && activityRule.limite_anual > 0) {
-               const assignedCount = timesAssignedInYear(cli.id_cliente, promo.id_promocion);
-               if (assignedCount >= activityRule.limite_anual) {
-                  limitValid = false;
-               }
+              const assignedCount = timesAssignedInYear(cli.id_cliente, promo.id_promocion);
+              if (assignedCount >= activityRule.limite_anual) {
+                limitValid = false;
+              }
             }
 
             if (limitValid) {
-               candidateVigencias.push({ vig, promo });
+              candidateVigencias.push({ vig, promo });
             }
           }
         }
@@ -107,23 +120,23 @@ export default function Asignaciones() {
       // If we have candidates, pick the best one
       if (candidateVigencias.length > 0) {
         candidateVigencias.sort((a, b) => {
-           // Rule: pick most favorable (% discount desc)
-           if (b.promo.porcentaje_descuento !== a.promo.porcentaje_descuento) {
-             return b.promo.porcentaje_descuento - a.promo.porcentaje_descuento;
-           }
-           // Tie-breaker: oldest vigencia (fecha_inicio asc)
-           return new Date(a.vig.fecha_inicio) - new Date(b.vig.fecha_inicio);
+          // Rule: pick most favorable (% discount desc)
+          if (b.promo.porcentaje_descuento !== a.promo.porcentaje_descuento) {
+            return b.promo.porcentaje_descuento - a.promo.porcentaje_descuento;
+          }
+          // Tie-breaker: oldest vigencia (fecha_inicio asc)
+          return new Date(a.vig.fecha_inicio) - new Date(b.vig.fecha_inicio);
         });
 
         const best = candidateVigencias[0];
         nuevasAsignaciones.push({
-           id_cliente: cli.id_cliente,
-           id_vigencia_promocion: best.vig.id_vigencia_promocion,
-           fecha_asignacion: todayString
+          id_cliente: cli.id_cliente,
+          id_vigencia_promocion: best.vig.id_vigencia_promocion,
+          fecha_asignacion: todayString
         });
       }
     }
-    
+
     if (nuevasAsignaciones.length > 0) {
       await db.clienteAplicaPromocion.bulkAdd(nuevasAsignaciones);
       setAlertConfig({
@@ -152,7 +165,7 @@ export default function Asignaciones() {
     const cli = clientesDB.find(c => c.id_cliente === a.id_cliente);
     const vig = vigenciasDB.find(v => v.id_vigencia_promocion === a.id_vigencia_promocion);
     const pro = vig ? promocionesDB.find(p => p.id_promocion === vig.id_promocion) : null;
-    
+
     return {
       id_cliente: a.id_cliente,
       id_vigencia: a.id_vigencia_promocion,
@@ -184,15 +197,15 @@ export default function Asignaciones() {
     const sortedDates = [...asignacionesDB].sort((a, b) => new Date(b.fecha_asignacion) - new Date(a.fecha_asignacion));
     const maxDateString = sortedDates[0].fecha_asignacion;
     const [year, month, day] = maxDateString.split('-');
-    
+
     ultimaAsignacionStr = `${day}/${month}/${year}`;
-    
+
     const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     ultimoPeriodoStr = `${months[parseInt(month, 10) - 1]} ${year}`;
 
     const today = new Date();
     const isCurrentMonth = today.getFullYear() === parseInt(year, 10) && today.getMonth() === (parseInt(month, 10) - 1);
-    
+
     if (isCurrentMonth) {
       estadoAsignacion = 'Al día';
       estadoColor = '#66A3D2';
@@ -227,12 +240,12 @@ export default function Asignaciones() {
 
       <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h3 style={{ fontSize: '1.1rem', color: '#212B33', marginBottom: '0.25rem' }}>Procesamiento de Fin de Mes</h3>
+          <h3 style={{ fontSize: '1.1rem', color: '#212B33', marginBottom: '0.25rem' }}>Procesamiento de Asignaciones</h3>
           <p style={{ fontSize: '0.875rem', color: '#66737D' }}>Ejecute el motor de reglas de promoción con la base de datos actual.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FCECEB', color: '#E74C3C', border: '1px solid #E74C3C' }} onClick={() => setConfirmReset(true)}>
-             <RefreshCw size={16} /> Reiniciar BD
+            <RefreshCw size={16} /> Reiniciar BD
           </button>
           <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={ejecutarAsignaciones}>
             <Play size={16} /> Ejecutar Asignación
@@ -263,7 +276,7 @@ export default function Asignaciones() {
               </div>
             )}
           </div>
-          
+
           <div style={{ fontWeight: 600, color: '#212B33' }}>
             Asignación de promociones {ultimoPeriodoStr !== '--' ? ultimoPeriodoStr : ''}
           </div>
@@ -299,15 +312,15 @@ export default function Asignaciones() {
         </table>
       </div>
 
-      <ConfirmModal 
-        isOpen={confirmReset} 
-        title="Restaurar Base de Datos" 
+      <ConfirmModal
+        isOpen={confirmReset}
+        title="Restaurar Base de Datos"
         message="¿Estás seguro de reiniciar la Base de Datos a sus valores iniciales de prueba? Se borrarán de forma irreversible todos los cambios actuales."
         onConfirm={handleReset}
         onCancel={() => setConfirmReset(false)}
       />
 
-      <AlertModal 
+      <AlertModal
         isOpen={alertConfig.isOpen}
         title={alertConfig.title}
         message={alertConfig.message}
