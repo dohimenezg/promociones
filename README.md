@@ -64,6 +64,8 @@ La aplicación permite al usuario (normalmente perfiles de gerencia o mercadeo) 
 
 ## 4. Estructura de la Base de Datos
 
+![Diagrama Relacional de la Base de Datos](./docs/images/ap-final.png)
+
 El sistema se cimenta sobre cimientos de datos compuestos por **15 tablas altamente interconectadas y normalizadas**:
 
 - `tipoIdentificacion`, `tipoPersona`, `departamento`, `ciudad`, `planComercial`, `actividadEconomica`, `calificacionFinanciera`.
