@@ -34,6 +34,7 @@ export default function DetalleCliente() {
   const asignacionesDB = useLiveQuery(() => id_cliente ? db.clienteAplicaPromocion.where('id_cliente').equals(id_cliente).toArray() : [], [id_cliente]) || [];
   const vigenciasDB = useLiveQuery(() => db.vigenciaPromocion.toArray()) || [];
   const promocionesDB = useLiveQuery(() => db.promocion.toArray()) || [];
+  const relActsDB = useLiveQuery(() => db.promocionAdmiteActividadEconomica.toArray()) || [];
 
   if (!id_cliente || cliente === undefined) {
     return <div style={{ padding: '2rem' }}>Cargando datos del cliente...</div>;
@@ -65,11 +66,32 @@ export default function DetalleCliente() {
   const promosAsignadas = asignacionesDB.map(a => {
     const vig = vigenciasDB.find(v => v.id_vigencia_promocion === a.id_vigencia_promocion);
     const promo = vig ? promocionesDB.find(p => p.id_promocion === vig.id_promocion) : null;
+    
+    let usosAño = 0;
+    let limite = 'Sin límite';
+
+    if (promo && vig && cliente) {
+      const yearAsignacion = new Date(a.fecha_asignacion).getFullYear();
+      const vigsMismaPromo = vigenciasDB.filter(v2 => v2.id_promocion === promo.id_promocion).map(v2 => v2.id_vigencia_promocion);
+      
+      usosAño = asignacionesDB.filter(a2 => {
+        if (!vigsMismaPromo.includes(a2.id_vigencia_promocion)) return false;
+        const yr2 = new Date(a2.fecha_asignacion).getFullYear();
+        return yr2 === yearAsignacion;
+      }).length;
+
+      const rel = relActsDB.find(r => r.id_promocion === promo.id_promocion && r.id_actividad_economica === cliente.id_actividad_economica);
+      if (rel && rel.limite_anual) {
+        limite = rel.limite_anual;
+      }
+    }
+
     return {
       name: promo ? promo.nombre : 'Desconocida',
       date: vig ? formatMonthYear(vig.fecha_inicio) : '',
       discount: promo ? promo.porcentaje_descuento + '%' : '0%',
-      assigned: formatDate(a.fecha_asignacion)
+      assigned: formatDate(a.fecha_asignacion),
+      uso: `${usosAño} ${limite !== 'Sin límite' ? `de ${limite}` : '(Sin límite)'}`
     };
   });
 
@@ -135,6 +157,7 @@ export default function DetalleCliente() {
               <th>PROMOCIÓN</th>
               <th>VIGENCIA INICIAL</th>
               <th>DESCUENTO</th>
+              <th>USO ANUAL</th>
               <th>FECHA ASIGNACIÓN</th>
             </tr>
           </thead>
@@ -149,6 +172,7 @@ export default function DetalleCliente() {
                   <td style={{ color: '#66737D' }}>{promo.name}</td>
                   <td style={{ color: '#66737D' }}>{promo.date}</td>
                   <td style={{ fontWeight: 600, color: '#212B33' }}>{promo.discount}</td>
+                  <td style={{ fontWeight: 600, color: '#212B33' }}>{promo.uso}</td>
                   <td style={{ color: '#66737D' }}>{promo.assigned}</td>
                 </tr>
               ))

@@ -245,7 +245,7 @@ export default function Asignaciones() {
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FCECEB', color: '#E74C3C', border: '1px solid #E74C3C' }} onClick={() => setConfirmReset(true)}>
-            <RefreshCw size={16} /> Reiniciar BD
+            <RefreshCw size={16} /> Resincronizar BD
           </button>
           <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={ejecutarAsignaciones}>
             <Play size={16} /> Ejecutar Asignación

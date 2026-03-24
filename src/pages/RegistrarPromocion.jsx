@@ -74,6 +74,7 @@ export default function RegistrarPromocion() {
 
   const [allowAllActividades, setAllowAllActividades] = useState(false);
   const [selectedActividades, setSelectedActividades] = useState([]);
+  const [actividadesLimits, setActividadesLimits] = useState({});
 
   const [allowAllCalificaciones, setAllowAllCalificaciones] = useState(false);
   const [selectedCalificaciones, setSelectedCalificaciones] = useState([]);
@@ -98,7 +99,7 @@ export default function RegistrarPromocion() {
       setAlert({ isOpen: true, title: 'Datos Incompletos', message: 'El nombre, descripción y el porcentaje de descuento son obligatorios.', type: 'error' });
       return;
     }
-    
+
     const valDescuento = Number(descuento);
     if (valDescuento <= 0 || valDescuento > 100) {
       setAlert({ isOpen: true, title: 'Valor Inválido', message: 'El porcentaje de descuento debe ser mayor a 0 y máximo 100.', type: 'error' });
@@ -122,7 +123,7 @@ export default function RegistrarPromocion() {
         return;
       }
     }
-    
+
     // Save promotion
     const idPromocion = await db.promocion.add({
       nombre,
@@ -143,14 +144,17 @@ export default function RegistrarPromocion() {
       await db.promocionAdmiteCalificacionFinanciera.bulkAdd(selectedCalificaciones.map(id => ({ id_calificacion_financiera: id, id_promocion: idPromocion })));
     }
     if (!allowAllActividades && selectedActividades.length > 0) {
-      // Por defecto registramos sin límite anual desde esta vista simplificada
-      await db.promocionAdmiteActividadEconomica.bulkAdd(selectedActividades.map(id => ({ id_actividad_economica: id, id_promocion: idPromocion, limite_anual: null })));
+      await db.promocionAdmiteActividadEconomica.bulkAdd(selectedActividades.map(id => ({
+        id_actividad_economica: id,
+        id_promocion: idPromocion,
+        limite_anual: actividadesLimits[id] ? Number(actividadesLimits[id]) : null
+      })));
     }
 
-    setAlert({ 
-      isOpen: true, 
-      title: 'Registro Exitoso', 
-      message: 'Promoción registrada exitosamente. Serás redirigido a gestionar su historial de vigencias.', 
+    setAlert({
+      isOpen: true,
+      title: 'Registro Exitoso',
+      message: 'Promoción registrada exitosamente. Serás redirigido a gestionar su historial de vigencias.',
       type: 'success',
       redirectId: idPromocion
     });
@@ -162,8 +166,8 @@ export default function RegistrarPromocion() {
 
       <div className="card">
         <h3 style={{ marginBottom: '1.5rem', color: '#212B33' }}>Información General</h3>
-        
-        
+
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div className="form-group">
@@ -181,7 +185,7 @@ export default function RegistrarPromocion() {
           <input type="text" className="form-control" placeholder="Ej: Bono para los mejores clientes..." value={desc} onChange={e => setDesc(e.target.value)} />
         </div>
 
-        
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2">
           <div className="form-group">
@@ -201,16 +205,40 @@ export default function RegistrarPromocion() {
           El cliente debe cumplir <strong>TODOS</strong> los criterios seleccionados para recibir la promoción.
         </p>
 
-        
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <FilterGroup title="Planes Comerciales Admitidos" items={ALL_PLANES} selectedItems={selectedPlanes} setSelectedItems={setSelectedPlanes} allowAll={allowAllPlanes} setAllowAll={setAllowAllPlanes} />
           <FilterGroup title="Ciudades Admitidas" items={ALL_CIUDADES} selectedItems={selectedCiudades} setSelectedItems={setSelectedCiudades} allowAll={allowAllCiudades} setAllowAll={setAllowAllCiudades} />
         </div>
-        
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2">
-          <FilterGroup title="Actividades Económicas Admitidas" items={ALL_ACTIVIDADES} selectedItems={selectedActividades} setSelectedItems={setSelectedActividades} allowAll={allowAllActividades} setAllowAll={setAllowAllActividades} />
+          <div>
+            <FilterGroup title="Actividades Económicas Admitidas" items={ALL_ACTIVIDADES} selectedItems={selectedActividades} setSelectedItems={setSelectedActividades} allowAll={allowAllActividades} setAllowAll={setAllowAllActividades} />
+            {(allowAllActividades || selectedActividades.length > 0) && (
+              <div style={{ marginTop: '1rem', padding: '1rem', background: '#F9FAFB', borderRadius: '4px', border: '1px solid #EAEAEA' }}>
+                <p style={{ fontSize: '0.75rem', color: '#66737D', marginBottom: '0.5rem', fontWeight: 600 }}>Límites anuales por Actividad</p>
+                {(allowAllActividades ? ALL_ACTIVIDADES.map(a => a.id) : selectedActividades).map(id => {
+                  const name = ALL_ACTIVIDADES.find(a => a.id === id)?.nombre;
+                  return (
+                    <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.875rem' }}>{name}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Sin límite"
+                        className="form-control"
+                        style={{ width: '100px', padding: '0.25rem' }}
+                        value={actividadesLimits[id] || ''}
+                        onChange={e => setActividadesLimits({ ...actividadesLimits, [id]: e.target.value })}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           <FilterGroup title="Calificaciones Financieras Admitidas" items={ALL_CALIFICACIONES} selectedItems={selectedCalificaciones} setSelectedItems={setSelectedCalificaciones} allowAll={allowAllCalificaciones} setAllowAll={setAllowAllCalificaciones} />
         </div>
       </div>
@@ -220,11 +248,11 @@ export default function RegistrarPromocion() {
         <button className="btn-primary" onClick={handleSave}>Guardar Promoción</button>
       </div>
 
-      <AlertModal 
-        isOpen={alert.isOpen} 
-        title={alert.title} 
-        message={alert.message} 
-        type={alert.type} 
+      <AlertModal
+        isOpen={alert.isOpen}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
         onClose={() => {
           setAlert(prev => ({ ...prev, isOpen: false }));
           if (alert.type === 'success' && alert.redirectId) {

@@ -60,7 +60,11 @@ export default function DetallePromocion() {
     const d = c ? deptosDB.find(d => d.id_departamento === c.id_departamento) : null;
     return c ? `${c.nombre}${d ? `, ${d.nombre}` : ''}` : null;
   }).filter(Boolean);
-  const namesActs = relActs.map(ra => actsDB.find(a => a.id_actividad_economica === ra.id_actividad_economica)?.nombre).filter(Boolean);
+  const namesActs = relActs.map(ra => {
+    const a = actsDB.find(a => a.id_actividad_economica === ra.id_actividad_economica);
+    if (!a) return null;
+    return ra.limite_anual ? `${a.nombre} (Máx: ${ra.limite_anual}/año)` : `${a.nombre} (Sin límite)`;
+  }).filter(Boolean);
   const namesCalifs = relCalifs.map(rc => califsDB.find(c => c.id_calificacion_financiera === rc.id_calificacion_financiera)?.nombre).filter(Boolean);
 
   const formatDate = (dateString) => {

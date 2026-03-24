@@ -19,6 +19,29 @@ export default function DetalleAsignacion() {
   const vigencia = useLiveQuery(() => asignacion ? db.vigenciaPromocion.get(asignacion.id_vigencia_promocion) : null, [asignacion]);
   const promocion = useLiveQuery(() => vigencia ? db.promocion.get(vigencia.id_promocion) : null, [vigencia]);
 
+  const asignacionesCliente = useLiveQuery(() => id_cliente ? db.clienteAplicaPromocion.where('id_cliente').equals(id_cliente).toArray() : [], [id_cliente]) || [];
+  const vigenciasTodas = useLiveQuery(() => db.vigenciaPromocion.toArray()) || [];
+  const relActs = useLiveQuery(() => db.promocionAdmiteActividadEconomica.toArray()) || [];
+
+  let conteoAnual = 0;
+  let limiteAnual = null;
+
+  if (promocion && asignacion && cliente && vigenciasTodas.length > 0 && asignacionesCliente.length > 0) {
+    const yearAsignacion = new Date(asignacion.fecha_asignacion).getFullYear();
+    const vigsMismaPromo = vigenciasTodas.filter(v => v.id_promocion === promocion.id_promocion).map(v => v.id_vigencia_promocion);
+    
+    conteoAnual = asignacionesCliente.filter(a => {
+      if (!vigsMismaPromo.includes(a.id_vigencia_promocion)) return false;
+      const yr = new Date(a.fecha_asignacion).getFullYear();
+      return yr === yearAsignacion;
+    }).length;
+
+    const relAct = relActs.find(r => r.id_promocion === promocion.id_promocion && r.id_actividad_economica === cliente.id_actividad_economica);
+    if (relAct && relAct.limite_anual) {
+      limiteAnual = relAct.limite_anual;
+    }
+  }
+
   if (!id_cliente || !id_vigencia_promocion || asignacion === undefined) return <div style={{ padding: '2rem' }}>Cargando asignación...</div>;
   if (asignacion === null) return <div style={{ padding: '2rem' }}>Asignación no encontrada.</div>;
 
@@ -70,6 +93,12 @@ export default function DetalleAsignacion() {
             <label style={{ fontSize: '0.75rem', color: '#66737D' }}>Fecha de Asignación</label>
             <div style={{ fontWeight: 600, color: '#212B33', fontSize: '1rem', marginTop: '0.25rem' }}>
               {formatDate(asignacion.fecha_asignacion)}
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: '0.75rem', color: '#66737D' }}>Uso Anual de Promoción</label>
+            <div style={{ fontWeight: 600, color: '#212B33', fontSize: '1rem', marginTop: '0.25rem' }}>
+              {conteoAnual > 0 ? `${conteoAnual} ${limiteAnual ? `de ${limiteAnual}` : '(Sin límite)'}` : 'Cargando...'}
             </div>
           </div>
         </div>

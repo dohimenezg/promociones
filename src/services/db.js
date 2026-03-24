@@ -136,7 +136,7 @@ db.on('populate', async () => {
     { id_promocion: 7, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
     { id_promocion: 8, fecha_inicio: '2026-03-01', fecha_fin: '2026-06-30' },
     { id_promocion: 9, fecha_inicio: '2025-01-01', fecha_fin: '2026-12-31' },
-    { id_promocion: 4, fecha_inicio: '2026-02-01', fecha_fin: '2026-02-28' }, // ID 10 - Histórica Expira
+    { id_promocion: 4, fecha_inicio: '2025-11-01', fecha_fin: '2025-11-30' }, // ID 10 - Separado por meses hacia el pasado (Noviembre 2025)
     // ELIMINADA: { id_promocion: 4, fecha_inicio: '2026-03-01', fecha_fin: '2026-03-31' } para evitar la Vigencia Activa de esta Promo confusa
     { id_promocion: 1, fecha_inicio: '2027-01-01', fecha_fin: '2027-12-31' },
     { id_promocion: 2, fecha_inicio: '2027-05-01', fecha_fin: '2027-10-31' },
@@ -169,15 +169,15 @@ db.on('populate', async () => {
 
   // Poblado de parámetros intermedios para Promociones
   await db.promocionAdmiteActividadEconomica.bulkAdd([
-    { id_actividad_economica: 3, id_promocion: 1, limite_anual: 0 },
-    { id_actividad_economica: 2, id_promocion: 1, limite_anual: 0 },
-    { id_actividad_economica: 2, id_promocion: 2, limite_anual: 0 },
-    { id_actividad_economica: 3, id_promocion: 2, limite_anual: 0 },
-    { id_actividad_economica: 4, id_promocion: 3, limite_anual: 0 },
-    { id_actividad_economica: 2, id_promocion: 4, limite_anual: 2 }, // Restaurante, límite 2 por año
-    { id_actividad_economica: 3, id_promocion: 4, limite_anual: 3 }, // Bar, límite 3 por año
-    { id_actividad_economica: 5, id_promocion: 6, limite_anual: 0 },
-    { id_actividad_economica: 4, id_promocion: 7, limite_anual: 0 }
+    { id_actividad_economica: 3, id_promocion: 1, limite_anual: 4 }, // Bar: límite 4
+    { id_actividad_economica: 2, id_promocion: 1, limite_anual: 1 }, // Restaurante: limite 1
+    { id_actividad_economica: 2, id_promocion: 2, limite_anual: 1 }, // Restaurante: límite 1
+    { id_actividad_economica: 3, id_promocion: 2, limite_anual: 6 }, // Bar: límite 6
+    { id_actividad_economica: 4, id_promocion: 3, limite_anual: 2 }, // Eventos: límite 2
+    { id_actividad_economica: 2, id_promocion: 4, limite_anual: 2 }, // Restaurante: límite 2 por año
+    { id_actividad_economica: 3, id_promocion: 4, limite_anual: 3 }, // Bar: límite 3 por año
+    { id_actividad_economica: 5, id_promocion: 6, limite_anual: 5 }, // Salud: límite 5
+    { id_actividad_economica: 4, id_promocion: 7, limite_anual: 5 } // Eventos: límite 5
   ]);
 
   await db.promocionAdmiteCiudad.bulkAdd([
@@ -194,12 +194,38 @@ db.on('populate', async () => {
     { id_calificacion_financiera: 1, id_promocion: 7 }
   ]);
 
+  // Llenado automático para convertir "Aplica para todos" (vacío) en inserciones explícitas (Consistencia Semilla)
+  const allPromos = await db.promocion.toArray();
+  const allPlanes = await db.planComercial.toArray();
+  const allCiudades = await db.ciudad.toArray();
+  const allCalifs = await db.calificacionFinanciera.toArray();
+  const allActs = await db.actividadEconomica.toArray();
+  
+  for (const p of allPromos) {
+    const pId = p.id_promocion;
+    const countPlanes = await db.promocionAdmitePlanComercial.where({ id_promocion: pId }).count();
+    if (countPlanes === 0) await db.promocionAdmitePlanComercial.bulkAdd(allPlanes.map(x => ({ id_plan_comercial: x.id_plan_comercial, id_promocion: pId })));
+    
+    const countCiudades = await db.promocionAdmiteCiudad.where({ id_promocion: pId }).count();
+    if (countCiudades === 0) await db.promocionAdmiteCiudad.bulkAdd(allCiudades.map(x => ({ id_ciudad: x.id_ciudad, id_promocion: pId })));
+    
+    const countCalifs = await db.promocionAdmiteCalificacionFinanciera.where({ id_promocion: pId }).count();
+    if (countCalifs === 0) await db.promocionAdmiteCalificacionFinanciera.bulkAdd(allCalifs.map(x => ({ id_calificacion_financiera: x.id_calificacion_financiera, id_promocion: pId })));
+    
+    const countActs = await db.promocionAdmiteActividadEconomica.where({ id_promocion: pId }).count();
+    if (countActs === 0) await db.promocionAdmiteActividadEconomica.bulkAdd(allActs.map(x => ({ 
+      id_actividad_economica: x.id_actividad_economica, 
+      id_promocion: pId, 
+      limite_anual: (x.id_actividad_economica === 2 || x.id_actividad_economica === 3) ? 2 : ((pId % 2 === 0) ? 3 : null) 
+    })));
+  }
+
   // HISTORICAL ASSIGNMENTS TO PROVE CAPS AND IMMUTABILITY
   await db.clienteAplicaPromocion.bulkAdd([
      { id_cliente: 15, id_vigencia_promocion: 4, fecha_asignacion: '2026-01-15' }, // Bar La Esquina
-     { id_cliente: 15, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' },
+     { id_cliente: 15, id_vigencia_promocion: 10, fecha_asignacion: '2025-11-15' },
      { id_cliente: 17, id_vigencia_promocion: 4, fecha_asignacion: '2026-01-15' }, // Restaurante El Sabor
-     { id_cliente: 17, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' },
+     { id_cliente: 17, id_vigencia_promocion: 10, fecha_asignacion: '2025-11-15' },
      // MAS REGISTROS SOLICITADOS (minimo 10 en cada tabla)
      { id_cliente: 1, id_vigencia_promocion: 1, fecha_asignacion: '2026-01-15' },
      { id_cliente: 2, id_vigencia_promocion: 5, fecha_asignacion: '2026-02-10' },

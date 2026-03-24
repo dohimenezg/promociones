@@ -74,6 +74,7 @@ export default function EditarPromocion() {
 
   const [allowAllActividades, setAllowAllActividades] = useState(true);
   const [selectedActividades, setSelectedActividades] = useState([]);
+  const [actividadesLimits, setActividadesLimits] = useState({});
 
   const [allowAllCalificaciones, setAllowAllCalificaciones] = useState(true);
   const [selectedCalificaciones, setSelectedCalificaciones] = useState([]);
@@ -91,25 +92,33 @@ export default function EditarPromocion() {
         setMaxFact(p.facturacion_max || '');
       }
 
-      const pPlanes = await db.promocionAdmitePlanComercial.where({id_promocion}).toArray();
+      const pPlanes = await db.promocionAdmitePlanComercial.where({ id_promocion }).toArray();
       if (pPlanes.length > 0) {
         setAllowAllPlanes(false);
         setSelectedPlanes(pPlanes.map(x => x.id_plan_comercial));
       }
 
-      const pCiudades = await db.promocionAdmiteCiudad.where({id_promocion}).toArray();
+      const pCiudades = await db.promocionAdmiteCiudad.where({ id_promocion }).toArray();
       if (pCiudades.length > 0) {
         setAllowAllCiudades(false);
         setSelectedCiudades(pCiudades.map(x => x.id_ciudad));
       }
 
-      const pActs = await db.promocionAdmiteActividadEconomica.where({id_promocion}).toArray();
+      const pActs = await db.promocionAdmiteActividadEconomica.where({ id_promocion }).toArray();
       if (pActs.length > 0) {
         setAllowAllActividades(false);
         setSelectedActividades(pActs.map(x => x.id_actividad_economica));
+
+        const limitsObj = {};
+        pActs.forEach(x => {
+          if (x.limite_anual !== null) {
+            limitsObj[x.id_actividad_economica] = x.limite_anual;
+          }
+        });
+        setActividadesLimits(limitsObj);
       }
 
-      const pCalifs = await db.promocionAdmiteCalificacionFinanciera.where({id_promocion}).toArray();
+      const pCalifs = await db.promocionAdmiteCalificacionFinanciera.where({ id_promocion }).toArray();
       if (pCalifs.length > 0) {
         setAllowAllCalificaciones(false);
         setSelectedCalificaciones(pCalifs.map(x => x.id_calificacion_financiera));
@@ -162,7 +171,7 @@ export default function EditarPromocion() {
         return;
       }
     }
-    
+
     // Update promotion
     await db.promocion.update(id_promocion, {
       nombre,
@@ -173,30 +182,38 @@ export default function EditarPromocion() {
     });
 
     // Replace parameters
-    await db.promocionAdmitePlanComercial.where({id_promocion}).delete();
-    if (!allowAllPlanes && selectedPlanes.length > 0) {
-      await db.promocionAdmitePlanComercial.bulkAdd(selectedPlanes.map(id => ({ id_plan_comercial: id, id_promocion: id_promocion })));
+    await db.promocionAdmitePlanComercial.where({ id_promocion }).delete();
+    const activePlanes = allowAllPlanes ? ALL_PLANES.map(p => p.id) : selectedPlanes;
+    if (activePlanes.length > 0) {
+      await db.promocionAdmitePlanComercial.bulkAdd(activePlanes.map(id => ({ id_plan_comercial: id, id_promocion: id_promocion })));
     }
 
-    await db.promocionAdmiteCiudad.where({id_promocion}).delete();
-    if (!allowAllCiudades && selectedCiudades.length > 0) {
-      await db.promocionAdmiteCiudad.bulkAdd(selectedCiudades.map(id => ({ id_ciudad: id, id_promocion: id_promocion })));
+    await db.promocionAdmiteCiudad.where({ id_promocion }).delete();
+    const activeCiudades = allowAllCiudades ? ALL_CIUDADES.map(c => c.id) : selectedCiudades;
+    if (activeCiudades.length > 0) {
+      await db.promocionAdmiteCiudad.bulkAdd(activeCiudades.map(id => ({ id_ciudad: id, id_promocion: id_promocion })));
     }
 
-    await db.promocionAdmiteCalificacionFinanciera.where({id_promocion}).delete();
-    if (!allowAllCalificaciones && selectedCalificaciones.length > 0) {
-      await db.promocionAdmiteCalificacionFinanciera.bulkAdd(selectedCalificaciones.map(id => ({ id_calificacion_financiera: id, id_promocion: id_promocion })));
+    await db.promocionAdmiteCalificacionFinanciera.where({ id_promocion }).delete();
+    const activeCalifs = allowAllCalificaciones ? ALL_CALIFICACIONES.map(c => c.id) : selectedCalificaciones;
+    if (activeCalifs.length > 0) {
+      await db.promocionAdmiteCalificacionFinanciera.bulkAdd(activeCalifs.map(id => ({ id_calificacion_financiera: id, id_promocion: id_promocion })));
     }
 
-    await db.promocionAdmiteActividadEconomica.where({id_promocion}).delete();
-    if (!allowAllActividades && selectedActividades.length > 0) {
-      await db.promocionAdmiteActividadEconomica.bulkAdd(selectedActividades.map(id => ({ id_actividad_economica: id, id_promocion: id_promocion, limite_anual: null })));
+    await db.promocionAdmiteActividadEconomica.where({ id_promocion }).delete();
+    const activeActs = allowAllActividades ? ALL_ACTIVIDADES.map(a => a.id) : selectedActividades;
+    if (activeActs.length > 0) {
+      await db.promocionAdmiteActividadEconomica.bulkAdd(activeActs.map(id => ({
+        id_actividad_economica: id,
+        id_promocion: id_promocion,
+        limite_anual: actividadesLimits[id] ? Number(actividadesLimits[id]) : null
+      })));
     }
 
-    setAlert({ 
-      isOpen: true, 
-      title: 'Actualización Exitosa', 
-      message: 'Promoción actualizada exitosamente. Serás redirigido a gestionar su historial de vigencias.', 
+    setAlert({
+      isOpen: true,
+      title: 'Actualización Exitosa',
+      message: 'Promoción actualizada exitosamente. Serás redirigido a gestionar su historial de vigencias.',
       type: 'success',
       redirectId: id_promocion
     });
@@ -212,8 +229,8 @@ export default function EditarPromocion() {
 
       <div className="card">
         <h3 style={{ marginBottom: '1.5rem', color: '#212B33' }}>Información General</h3>
-        
-        
+
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div className="form-group">
@@ -231,7 +248,7 @@ export default function EditarPromocion() {
           <input type="text" className="form-control" value={desc} onChange={e => setDesc(e.target.value)} />
         </div>
 
-        
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2">
           <div className="form-group">
@@ -251,16 +268,40 @@ export default function EditarPromocion() {
           El cliente debe cumplir <strong>TODOS</strong> los criterios seleccionados para recibir la promoción.
         </p>
 
-        
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <FilterGroup title="Planes Comerciales Admitidos" items={ALL_PLANES} selectedItems={selectedPlanes} setSelectedItems={setSelectedPlanes} allowAll={allowAllPlanes} setAllowAll={setAllowAllPlanes} />
           <FilterGroup title="Ciudades Admitidas" items={ALL_CIUDADES} selectedItems={selectedCiudades} setSelectedItems={setSelectedCiudades} allowAll={allowAllCiudades} setAllowAll={setAllowAllCiudades} />
         </div>
-        
+
         <p style={{ fontSize: '0.875rem', color: '#434C52', marginBottom: '2rem' }}>Los campos marcados con * son obligatorios</p>
         <div className="grid-2">
-          <FilterGroup title="Actividades Económicas Admitidas" items={ALL_ACTIVIDADES} selectedItems={selectedActividades} setSelectedItems={setSelectedActividades} allowAll={allowAllActividades} setAllowAll={setAllowAllActividades} />
+          <div>
+            <FilterGroup title="Actividades Económicas Admitidas" items={ALL_ACTIVIDADES} selectedItems={selectedActividades} setSelectedItems={setSelectedActividades} allowAll={allowAllActividades} setAllowAll={setAllowAllActividades} />
+            {(allowAllActividades || selectedActividades.length > 0) && (
+              <div style={{ marginTop: '1rem', padding: '1rem', background: '#F9FAFB', borderRadius: '4px', border: '1px solid #EAEAEA' }}>
+                <p style={{ fontSize: '0.75rem', color: '#66737D', marginBottom: '0.5rem', fontWeight: 600 }}>Límites anuales por Actividad</p>
+                {(allowAllActividades ? ALL_ACTIVIDADES.map(a => a.id) : selectedActividades).map(id => {
+                  const name = ALL_ACTIVIDADES.find(a => a.id === id)?.nombre;
+                  return (
+                    <div key={id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.875rem' }}>{name}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Sin límite"
+                        className="form-control"
+                        style={{ width: '100px', padding: '0.25rem' }}
+                        value={actividadesLimits[id] || ''}
+                        onChange={e => setActividadesLimits({ ...actividadesLimits, [id]: e.target.value })}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
           <FilterGroup title="Calificaciones Financieras Admitidas" items={ALL_CALIFICACIONES} selectedItems={selectedCalificaciones} setSelectedItems={setSelectedCalificaciones} allowAll={allowAllCalificaciones} setAllowAll={setAllowAllCalificaciones} />
         </div>
       </div>
@@ -270,11 +311,11 @@ export default function EditarPromocion() {
         <button className="btn-primary" onClick={handleUpdate}>Guardar Cambios</button>
       </div>
 
-      <AlertModal 
-        isOpen={alert.isOpen} 
-        title={alert.title} 
-        message={alert.message} 
-        type={alert.type} 
+      <AlertModal
+        isOpen={alert.isOpen}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
         onClose={() => {
           setAlert(prev => ({ ...prev, isOpen: false }));
           if (alert.type === 'success' && alert.redirectId) {
