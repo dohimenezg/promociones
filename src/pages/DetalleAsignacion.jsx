@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react';
+import BackButton from '../components/BackButton';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -30,19 +30,12 @@ export default function DetalleAsignacion() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '2rem' }}>
-      <button
-        onClick={() => navigate('/asignaciones')}
-        style={{ background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#212B33', fontWeight: 600, cursor: 'pointer', marginBottom: '2rem' }}
-      >
-        <ChevronLeft size={20} /> Regresar a la lista
-      </button>
-
-      <h1 className="page-title" style={{ marginBottom: '2rem', color: '#000' }}>Detalle de Asignación</h1>
+      <BackButton fallbackPath='/asignaciones' fallbackState={null} title="Detalle de Asignación" />
 
       <div className="card" style={{ padding: '2rem' }}>
         <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: '#000', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem' }}>Información de la Asignación</h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div>
             <label style={{ fontSize: '0.75rem', color: '#66737D' }}>Identificación del Cliente</label>
             <div style={{ fontWeight: 600, color: '#212B33', fontSize: '1rem', marginTop: '0.25rem' }}>
@@ -57,7 +50,7 @@ export default function DetalleAsignacion() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div>
             <label style={{ fontSize: '0.75rem', color: '#66737D' }}>Promoción Asignada</label>
             <div style={{ fontWeight: 600, color: '#212B33', fontSize: '1rem', marginTop: '0.25rem' }}>
@@ -72,7 +65,7 @@ export default function DetalleAsignacion() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div>
             <label style={{ fontSize: '0.75rem', color: '#66737D' }}>Fecha de Asignación</label>
             <div style={{ fontWeight: 600, color: '#212B33', fontSize: '1rem', marginTop: '0.25rem' }}>

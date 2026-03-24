@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Filter, PlusCircle, Edit2, Trash2, Eye } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -14,6 +15,35 @@ export default function Ubicaciones() {
 
   const departamentosDB = useLiveQuery(() => db.departamento.toArray()) || [];
   const ciudadesDB = useLiveQuery(() => db.ciudad.toArray()) || [];
+
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
+
+  const promptDelete = (id) => {
+    setConfirmDelete({ isOpen: true, id });
+  };
+
+  const handleDelete = async () => {
+    const id = confirmDelete.id;
+    if (!id) return;
+    try {
+      if (activeTab === 'ciudades') {
+        await db.promocionAdmiteCiudad.where('id_ciudad').equals(id).delete();
+        await db.ciudad.delete(id);
+      } else if (activeTab === 'departamentos') {
+        const ciudades = await db.ciudad.where('id_departamento').equals(id).toArray();
+        const ciudadIds = ciudades.map(c => c.id_ciudad);
+        if (ciudadIds.length > 0) {
+          await db.promocionAdmiteCiudad.where('id_ciudad').anyOf(ciudadIds).delete();
+          await db.ciudad.bulkDelete(ciudadIds);
+        }
+        await db.departamento.delete(id);
+      }
+      setConfirmDelete({ isOpen: false, id: null });
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar registro');
+    }
+  };
 
   const ciudades = ciudadesDB.map(c => {
     const dpt = departamentosDB.find(d => d.id_departamento === c.id_departamento);
@@ -130,13 +160,21 @@ export default function Ubicaciones() {
                   <td style={{ display: 'flex', gap: '1rem', color: '#66737D' }}>
                   <Eye cursor="pointer" size={18} title="Ver detalle" onClick={() => navigate(currentConfig.detailLink, { state: { id: row.id } })} />
                   <Edit2 cursor="pointer" size={18} title="Editar" onClick={() => navigate(currentConfig.editLink, { state: { id: row.id } })} />
-                  <Trash2 cursor="pointer" size={18} title="Eliminar" />
+                  <Trash2 cursor="pointer" size={18} title="Eliminar" onClick={() => promptDelete(row.id)} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal 
+        isOpen={confirmDelete.isOpen} 
+        title="Eliminar Ubicación" 
+        message="¿Está seguro de eliminar este registro y sus dependencias (Vigencias / Promociones afectadas) irreversiblemente?"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

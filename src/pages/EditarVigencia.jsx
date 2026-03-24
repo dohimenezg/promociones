@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import BackButton from '../components/BackButton';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -54,14 +54,7 @@ export default function EditarVigencia() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '2rem' }}>
-      <button 
-        onClick={() => navigate('/promociones', { state: { tab: 'vigencias' } })}
-        style={{ background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#212B33', fontWeight: 600, cursor: 'pointer', marginBottom: '2rem' }}
-      >
-        <ChevronLeft size={20} /> Regresar a la lista
-      </button>
-
-      <h1 className="page-title" style={{ marginBottom: '2rem' }}>Edición de Vigencia</h1>
+      <BackButton fallbackPath='/promociones' fallbackState={{ tab: 'vigencias' }} title="Edición de Vigencia" />
 
       <div className="card" style={{ padding: '2rem' }}>
         <form onSubmit={handleUpdate}>
@@ -91,7 +84,7 @@ export default function EditarVigencia() {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
               <label className="form-label">Fecha de Inicio</label>
               <input type="date" className="form-control" name="fecha_inicio" defaultValue={vigencia.fecha_inicio} required />

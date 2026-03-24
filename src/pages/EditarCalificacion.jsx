@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react';
+import BackButton from '../components/BackButton';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -33,14 +33,7 @@ export default function EditarCalificacion() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '2rem' }}>
-      <button 
-        onClick={() => navigate(returnUrl, { state: { tab: 'calificacion' } })}
-        style={{ background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#212B33', fontWeight: 600, cursor: 'pointer', marginBottom: '2rem' }}
-      >
-        <ChevronLeft size={20} /> Regresar
-      </button>
-
-      <h1 className="page-title" style={{ marginBottom: '2rem', color: '#000' }}>Edición de Calificación Financiera</h1>
+      <BackButton fallbackPath='/parametros' fallbackState={null} title="Edición de Calificación Financiera" />
 
       <div className="card" style={{ padding: '2rem' }}>
         <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: '#000', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem' }}>Información</h3>

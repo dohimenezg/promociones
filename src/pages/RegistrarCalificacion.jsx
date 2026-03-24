@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import BackButton from '../components/BackButton';
 import { db } from '../services/db';
 
 export default function RegistrarCalificacion() {
@@ -26,14 +26,7 @@ export default function RegistrarCalificacion() {
 
   return (
     <div style={{ maxWidth: '600px', margin: '0 auto', paddingTop: '2rem' }}>
-      <button 
-        onClick={() => navigate('/parametros', { state: { tab: 'calificacion' } })}
-        style={{ background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#212B33', fontWeight: 600, cursor: 'pointer', marginBottom: '2rem' }}
-      >
-        <ChevronLeft size={20} /> Regresar a la lista
-      </button>
-
-      <h1 className="page-title" style={{ marginBottom: '2rem', color: '#000' }}>Registro de Calificación Financiera</h1>
+      <BackButton fallbackPath='/parametros' fallbackState={{ tab: 'calificacion' }} title="Registro de Calificación Financiera" />
 
       <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
         <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#000' }}>Datos de la calificación financiera</h3>

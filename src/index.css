@@ -201,3 +201,64 @@ body {
 .table tr:hover {
   background-color: #F9FAFB;
 }
+
+/* Responsive Grids */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tooltip */
+.custom-tooltip {
+  position: relative;
+  display: inline-flex;
+  cursor: not-allowed;
+}
+
+.custom-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background-color: var(--main-blue);
+  color: var(--pure-white);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  margin-bottom: 0.5rem;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  font-weight: 500;
+}
+
+.custom-tooltip:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  right: 1.5rem;
+  border: 6px solid transparent;
+  border-top-color: var(--main-blue);
+  margin-bottom: -0.25rem;
+  z-index: 100;
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Filter, PlusCircle, Eye, Edit2, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -18,6 +19,41 @@ export default function Promociones() {
   const vigenciasDB = useLiveQuery(() => db.vigenciaPromocion.toArray()) || [];
   const paramActividades = useLiveQuery(() => db.promocionAdmiteActividadEconomica.toArray()) || [];
   const actEcon = useLiveQuery(() => db.actividadEconomica.toArray()) || [];
+  const asignacionesDB = useLiveQuery(() => db.clienteAplicaPromocion.toArray()) || [];
+
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
+
+  const promptDelete = (id) => {
+    setConfirmDelete({ isOpen: true, id });
+  };
+
+  const handleDelete = async () => {
+    const id = confirmDelete.id;
+    if (!id) return;
+    try {
+      if (activeTab === 'promociones') {
+        await db.promocionAdmitePlanComercial.where('id_promocion').equals(id).delete();
+        await db.promocionAdmiteActividadEconomica.where('id_promocion').equals(id).delete();
+        await db.promocionAdmiteCiudad.where('id_promocion').equals(id).delete();
+        await db.promocionAdmiteCalificacionFinanciera.where('id_promocion').equals(id).delete();
+        
+        const vigencias = await db.vigenciaPromocion.where('id_promocion').equals(id).toArray();
+        const vigenciaIds = vigencias.map(v => v.id_vigencia_promocion);
+        if (vigenciaIds.length > 0) {
+          await db.clienteAplicaPromocion.where('id_vigencia_promocion').anyOf(vigenciaIds).delete();
+          await db.vigenciaPromocion.bulkDelete(vigenciaIds);
+        }
+        await db.promocion.delete(id);
+      } else if (activeTab === 'vigencias') {
+        await db.clienteAplicaPromocion.where('id_vigencia_promocion').equals(id).delete();
+        await db.vigenciaPromocion.delete(id);
+      }
+      setConfirmDelete({ isOpen: false, id: null });
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar registro');
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -32,6 +68,9 @@ export default function Promociones() {
       return act ? act.nombre : '';
     });
     
+    const misVigenciasIds = vigenciasDB.filter(v => v.id_promocion === p.id_promocion).map(v => v.id_vigencia_promocion);
+    const hasAssignments = asignacionesDB.some(a => misVigenciasIds.includes(a.id_vigencia_promocion));
+
     return {
       id: p.id_promocion,
       name: p.nombre,
@@ -39,7 +78,8 @@ export default function Promociones() {
       discount: p.porcentaje_descuento + '%',
       minFact: p.facturacion_min ? p.facturacion_min.toLocaleString('es-CO') : 'No aplica',
       maxFact: p.facturacion_max ? p.facturacion_max.toLocaleString('es-CO') : 'No aplica',
-      param: nombresCats.length > 0 ? nombresCats.join(', ') : 'Ninguno'
+      param: nombresCats.length > 0 ? nombresCats.join(', ') : 'Ninguno',
+      hasAssignments
     };
   });
 
@@ -52,12 +92,15 @@ export default function Promociones() {
     if (today >= start && today <= end) status = 'Activa';
     else if (today > end) status = 'Vencida';
 
+    const hasAssignments = asignacionesDB.some(a => a.id_vigencia_promocion === v.id_vigencia_promocion);
+
     return {
       id: v.id_vigencia_promocion,
       promo: promo ? promo.nombre : 'Desconocida',
       start: formatDate(v.fecha_inicio),
       end: formatDate(v.fecha_fin),
-      status
+      status,
+      hasAssignments
     };
   });
 
@@ -81,8 +124,17 @@ export default function Promociones() {
               <td style={{ fontWeight: 600, color: row.status === 'Activa' ? '#66A3D2' : '#66737D', whiteSpace: 'nowrap' }}>{row.status}</td>
               <td style={{ display: 'flex', gap: '0.5rem', color: '#66737D' }}>
                 <Eye cursor="pointer" size={16} title="Ver detalle" onClick={() => navigate('/promociones/detalle-vigencia', { state: { id_vigencia_promocion: row.id } })} />
-                <Edit2 cursor="pointer" size={16} title="Editar" onClick={() => navigate('/promociones/editar-vigencia', { state: { id_vigencia_promocion: row.id } })} />
-                <Trash2 cursor="pointer" size={16} title="Eliminar" />
+                {row.hasAssignments ? (
+                   <span className="custom-tooltip" data-tooltip="No se puede modificar/eliminar, tiene clientes asignados">
+                     <Edit2 size={16} color="#E0E4E8" />
+                     <Trash2 size={16} color="#E0E4E8" style={{ marginLeft: '0.5rem' }} />
+                   </span>
+                ) : (
+                   <>
+                     <Edit2 cursor="pointer" size={16} title="Editar" onClick={() => navigate('/promociones/editar-vigencia', { state: { id_vigencia_promocion: row.id } })} />
+                     <Trash2 cursor="pointer" size={16} title="Eliminar" onClick={() => promptDelete(row.id)} />
+                   </>
+                )}
               </td>
             </tr>
           )
@@ -108,8 +160,17 @@ export default function Promociones() {
               <td style={{ maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={row.param}>{row.param}</td>
               <td style={{ display: 'flex', gap: '0.5rem', color: '#66737D' }}>
                 <Eye cursor="pointer" size={16} title="Ver detalle" onClick={() => navigate('/promociones/detalle', { state: { id_promocion: row.id } })} />
-                <Edit2 cursor="pointer" size={16} title="Editar" onClick={() => navigate('/promociones/editar', { state: { id_promocion: row.id } })} />
-                <Trash2 cursor="pointer" size={16} title="Eliminar" />
+                {row.hasAssignments ? (
+                   <span className="custom-tooltip" data-tooltip="No se puede modificar/eliminar, tiene clientes asignados">
+                     <Edit2 size={16} color="#E0E4E8" />
+                     <Trash2 size={16} color="#E0E4E8" style={{ marginLeft: '0.5rem' }} />
+                   </span>
+                ) : (
+                   <>
+                     <Edit2 cursor="pointer" size={16} title="Editar" onClick={() => navigate('/promociones/editar', { state: { id_promocion: row.id } })} />
+                     <Trash2 cursor="pointer" size={16} title="Eliminar" onClick={() => promptDelete(row.id)} />
+                   </>
+                )}
               </td>
             </tr>
           )
@@ -193,6 +254,7 @@ export default function Promociones() {
                   <option value="">Todos los estados</option>
                   <option value="Activa">Activa</option>
                   <option value="Programada">Programada</option>
+                  <option value="Vencida">Vencida</option>
                 </select>
                 <input type="date" className="form-control" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
               </>
@@ -223,6 +285,14 @@ export default function Promociones() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal 
+        isOpen={confirmDelete.isOpen} 
+        title="Eliminar Promoción / Vigencia" 
+        message="¿Está seguro de eliminar de forma permanente? Esta acción borrará en cascada perfiles integrados a la promoción o historial de clientes que la utilicen."
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

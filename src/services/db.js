@@ -15,7 +15,7 @@ db.version(2).stores({
   promocion: '++id_promocion, nombre',
   promocionAdmiteCiudad: '[id_ciudad+id_promocion], id_ciudad, id_promocion',
   promocionAdmitePlanComercial: '[id_plan_comercial+id_promocion], id_plan_comercial, id_promocion',
-  promocionAdmiteActividadEconomica: '[id_actividad_economica+id_promocion], limite_anual, id_actividad_economica, id_promocion',
+  promocionAdmiteActividadEconomica: '[id_actividad_economica+id_promocion], id_actividad_economica, id_promocion',
   promocionAdmiteCalificacionFinanciera: '[id_calificacion_financiera+id_promocion], id_calificacion_financiera, id_promocion',
   vigenciaPromocion: '++id_vigencia_promocion, id_promocion',
   clienteAplicaPromocion: '[id_cliente+id_vigencia_promocion], id_cliente, id_vigencia_promocion'
@@ -23,7 +23,8 @@ db.version(2).stores({
 
 // Evento que se dispara SOLO la primera vez que se crea la base de datos en el navegador
 db.on('populate', async () => {
-  // --- CATALOGOS BASICOS ---
+  try {
+    // --- CATALOGOS BASICOS ---
   await db.tipoIdentificacion.bulkAdd([
     { nombre: 'Cédula de Ciudadanía' },
     { nombre: 'NIT' },
@@ -66,7 +67,7 @@ db.on('populate', async () => {
   await db.actividadEconomica.bulkAdd([
     { nombre: 'Residencial', descripcion: 'Uso doméstico enfocado en entretenimiento' },
     { nombre: 'Restaurante', descripcion: 'Requieren conectividad estable para facturación (POS)' },
-    { nombre: 'Bar', descripcion: 'Consumo alto por streaming' },
+    { nombre: 'Bares', descripcion: 'Consumo alto por streaming' },
     { nombre: 'Hospital / Salud', descripcion: 'Actividad de misión crítica' },
     { nombre: 'Universidad / Educación', descripcion: 'Densidad alta de usuarios' }
   ]);
@@ -84,14 +85,29 @@ db.on('populate', async () => {
     { nombre: 'Exclusividad Iquitos Premium', descripcion: 'Beneficio total para clientes...', porcentaje_descuento: 50, facturacion_min: 150000, facturacion_max: null },
     { nombre: 'Impulso Gastronómico Cali', descripcion: 'Apoyo a la reactivación de...', porcentaje_descuento: 10, facturacion_min: 90000, facturacion_max: 1000000 },
     { nombre: 'Conectividad Salud Crítica', descripcion: 'Tarifa especial para centros...', porcentaje_descuento: 30, facturacion_min: 200000, facturacion_max: 3000000 },
-    { nombre: 'Descuento 10% Cargo Básico', descripcion: 'Promoción especial de la regla de negocio para Bares y Restaurantes.', porcentaje_descuento: 10, facturacion_min: 80000, facturacion_max: null }
+    { nombre: 'Descuento 10% Cargo Básico', descripcion: 'Promoción especial de la regla de negocio para Bares y Restaurantes.', porcentaje_descuento: 10, facturacion_min: 80000, facturacion_max: null },
+    { nombre: 'Cali 20% Rebaja', descripcion: 'Descuento para todos en Cali.', porcentaje_descuento: 20, facturacion_min: 0, facturacion_max: null },
+    { nombre: 'Fidelización Universidades', descripcion: 'Aplica a sede Valle', porcentaje_descuento: 40, facturacion_min: 500000, facturacion_max: null },
+    { nombre: 'VIP Hospitalario', descripcion: 'Solo hospitales excelentes', porcentaje_descuento: 60, facturacion_min: 100000, facturacion_max: null },
+    { nombre: 'Reactivación Jamundí', descripcion: 'Descuento alto para Jamundí', porcentaje_descuento: 30, facturacion_min: 0, facturacion_max: null },
+    { nombre: 'Empate Antiguedad', descripcion: 'Empata con Cali 20%, pero es mas vieja', porcentaje_descuento: 20, facturacion_min: 0, facturacion_max: null }
   ]);
 
   await db.vigenciaPromocion.bulkAdd([
     { id_promocion: 1, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
     { id_promocion: 2, fecha_inicio: '2026-02-01', fecha_fin: '2026-02-28' },
     { id_promocion: 3, fecha_inicio: '2025-11-15', fecha_fin: '2026-05-15' },
-    { id_promocion: 4, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' }
+    { id_promocion: 4, fecha_inicio: '2026-01-01', fecha_fin: '2026-01-31' },
+    { id_promocion: 5, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
+    { id_promocion: 6, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
+    { id_promocion: 7, fecha_inicio: '2026-01-01', fecha_fin: '2026-12-31' },
+    { id_promocion: 8, fecha_inicio: '2026-03-01', fecha_fin: '2026-06-30' },
+    { id_promocion: 9, fecha_inicio: '2025-01-01', fecha_fin: '2026-12-31' },
+    { id_promocion: 4, fecha_inicio: '2026-02-01', fecha_fin: '2026-02-28' },
+    { id_promocion: 4, fecha_inicio: '2026-03-01', fecha_fin: '2026-03-31' },
+    { id_promocion: 1, fecha_inicio: '2027-01-01', fecha_fin: '2027-12-31' },
+    { id_promocion: 2, fecha_inicio: '2027-05-01', fecha_fin: '2027-10-31' },
+    { id_promocion: 5, fecha_inicio: '2028-01-01', fecha_fin: '2028-06-30' }
   ]);
 
   await db.cliente.bulkAdd([
@@ -104,29 +120,56 @@ db.on('populate', async () => {
     { identificacion: '66887223', nombre: 'Sofía Villamizar', celular: '3110000002', direccion: 'CR 10 N 15', promedio_facturacion: 215000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 1, id_calificacion_financiera: 3, id_tipo_identificacion: 1 },
     { identificacion: '29445112', nombre: 'Andrés Felipe Pava', celular: '3110000003', direccion: 'CL 40 22', promedio_facturacion: 72000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 4, id_plan_comercial: 2, id_actividad_economica: 1, id_calificacion_financiera: 1, id_tipo_identificacion: 1 },
     { identificacion: '1005667889', nombre: 'El Quijote', celular: '3110000004', direccion: 'Parque Principal', promedio_facturacion: 38000, saldo_vencido: 145200, id_tipo_persona: 2, id_ciudad: 5, id_plan_comercial: 1, id_actividad_economica: 2, id_calificacion_financiera: 5, id_tipo_identificacion: 2 },
+    { identificacion: '12345678', nombre: 'Muebles el Nogal', celular: '3140000000', direccion: 'Avenida 6', promedio_facturacion: 180000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 4, id_actividad_economica: 1, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
+    { identificacion: '87654321', nombre: 'Libreria Nacional', celular: '3151112233', direccion: 'Calle 8', promedio_facturacion: 55000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 5, id_plan_comercial: 2, id_actividad_economica: 1, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
+    { identificacion: '11223344', nombre: 'Carlos Ruiz', celular: '3109998877', direccion: 'Cra 12 #4', promedio_facturacion: 30000, saldo_vencido: 50000, id_tipo_persona: 1, id_ciudad: 1, id_plan_comercial: 1, id_actividad_economica: 1, id_calificacion_financiera: 4, id_tipo_identificacion: 1 },
+    { identificacion: '55667788', nombre: 'Hospital San Juan', celular: '3205556677', direccion: 'Calle 100', promedio_facturacion: 500000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 4, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
+    { identificacion: '99887766', nombre: 'Universidad del Valle', celular: '3101234567', direccion: 'Sede Melendez', promedio_facturacion: 1200000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 5, id_actividad_economica: 5, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
+    { identificacion: '10101010', nombre: 'Bar La Esquina', celular: '3009876543', direccion: 'Zona Rosa', promedio_facturacion: 95000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 4, id_plan_comercial: 3, id_actividad_economica: 3, id_calificacion_financiera: 2, id_tipo_identificacion: 2 },
+    { identificacion: '20202020', nombre: 'Marcia Velez', celular: '3112223344', direccion: 'Barrio Obrero', promedio_facturacion: 45000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 4, id_plan_comercial: 1, id_actividad_economica: 1, id_calificacion_financiera: 3, id_tipo_identificacion: 1 },
+    { identificacion: '30303030', nombre: 'Restaurante El Sabor', celular: '3156667788', direccion: 'Centro', promedio_facturacion: 110000, saldo_vencido: 0, id_tipo_persona: 2, id_ciudad: 1, id_plan_comercial: 4, id_actividad_economica: 2, id_calificacion_financiera: 1, id_tipo_identificacion: 2 },
+    { identificacion: '40404040', nombre: 'Fernando Gomez', celular: '3201112233', direccion: 'Cra 5', promedio_facturacion: 75000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 5, id_plan_comercial: 2, id_actividad_economica: 1, id_calificacion_financiera: 2, id_tipo_identificacion: 1 },
+    { identificacion: '50505050', nombre: 'Diana Rojas', celular: '3104445566', direccion: 'Calle 10', promedio_facturacion: 150000, saldo_vencido: 0, id_tipo_persona: 1, id_ciudad: 8, id_plan_comercial: 5, id_actividad_economica: 1, id_calificacion_financiera: 1, id_tipo_identificacion: 1 }
   ]);
 
 
   // Poblado de parámetros intermedios para Promociones
   await db.promocionAdmiteActividadEconomica.bulkAdd([
-    { id_actividad_economica: 3, id_promocion: 1, limite_anual: null },
-    { id_actividad_economica: 2, id_promocion: 1, limite_anual: null },
-    { id_actividad_economica: 2, id_promocion: 2, limite_anual: null },
-    { id_actividad_economica: 3, id_promocion: 2, limite_anual: null },
-    { id_actividad_economica: 4, id_promocion: 3, limite_anual: null },
+    { id_actividad_economica: 3, id_promocion: 1, limite_anual: 0 },
+    { id_actividad_economica: 2, id_promocion: 1, limite_anual: 0 },
+    { id_actividad_economica: 2, id_promocion: 2, limite_anual: 0 },
+    { id_actividad_economica: 3, id_promocion: 2, limite_anual: 0 },
+    { id_actividad_economica: 4, id_promocion: 3, limite_anual: 0 },
     { id_actividad_economica: 2, id_promocion: 4, limite_anual: 2 }, // Restaurante, límite 2 por año
-    { id_actividad_economica: 3, id_promocion: 4, limite_anual: 3 }  // Bar, límite 3 por año
+    { id_actividad_economica: 3, id_promocion: 4, limite_anual: 3 }, // Bar, límite 3 por año
+    { id_actividad_economica: 5, id_promocion: 6, limite_anual: 0 },
+    { id_actividad_economica: 4, id_promocion: 7, limite_anual: 0 }
   ]);
 
   await db.promocionAdmiteCiudad.bulkAdd([
     { id_ciudad: 1, id_promocion: 4 }, // Cali
-    { id_ciudad: 4, id_promocion: 4 }  // Palmira
+    { id_ciudad: 4, id_promocion: 4 }, // Palmira
+    { id_ciudad: 1, id_promocion: 5 },
+    { id_ciudad: 2, id_promocion: 8 },
+    { id_ciudad: 1, id_promocion: 9 }
   ]);
 
   await db.promocionAdmiteCalificacionFinanciera.bulkAdd([
     { id_calificacion_financiera: 1, id_promocion: 4 }, // Excelente
-    { id_calificacion_financiera: 2, id_promocion: 4 }  // Bueno
+    { id_calificacion_financiera: 2, id_promocion: 4 }, // Bueno
+    { id_calificacion_financiera: 1, id_promocion: 7 }
   ]);
+
+  // HISTORICAL ASSIGNMENTS TO PROVE CAPS AND IMMUTABILITY
+  await db.clienteAplicaPromocion.bulkAdd([
+     { id_cliente: 15, id_vigencia_promocion: 4, fecha_asignacion: '2026-01-15' }, // Bar La Esquina
+     { id_cliente: 15, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' },
+     { id_cliente: 17, id_vigencia_promocion: 4, fecha_asignacion: '2026-01-15' }, // Restaurante El Sabor
+     { id_cliente: 17, id_vigencia_promocion: 10, fecha_asignacion: '2026-02-15' }
+  ]);
+  } catch (err) {
+    console.error('Error poblando base de datos Dexie:', err);
+  }
 });
 
 export async function resetDatabase() {

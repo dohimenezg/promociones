@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Search, Filter, RefreshCw, Play, Download, Eye } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
+import AlertModal from '../components/AlertModal';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, resetDatabase } from '../services/db';
@@ -11,6 +13,15 @@ export default function Asignaciones() {
   const clientesDB = useLiveQuery(() => db.cliente.toArray()) || [];
   const vigenciasDB = useLiveQuery(() => db.vigenciaPromocion.toArray()) || [];
   const promocionesDB = useLiveQuery(() => db.promocion.toArray()) || [];
+
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
+
+  const handleReset = async () => {
+    setConfirmReset(false);
+    await resetDatabase();
+    window.location.reload();
+  };
 
   const ejecutarAsignaciones = async () => {
     // DO NOT clear db.clienteAplicaPromocion.
@@ -79,7 +90,7 @@ export default function Asignaciones() {
             // Check annual limit rule based on activity
             const activityRule = ruleActs.find(r => r.id_actividad_economica === cli.id_actividad_economica);
             let limitValid = true;
-            if (activityRule && activityRule.limite_anual !== null) {
+            if (activityRule && activityRule.limite_anual !== null && activityRule.limite_anual > 0) {
                const assignedCount = timesAssignedInYear(cli.id_cliente, promo.id_promocion);
                if (assignedCount >= activityRule.limite_anual) {
                   limitValid = false;
@@ -115,9 +126,19 @@ export default function Asignaciones() {
     
     if (nuevasAsignaciones.length > 0) {
       await db.clienteAplicaPromocion.bulkAdd(nuevasAsignaciones);
-      alert('Asignación ejecutada correctamente. Novedades agregadas: ' + nuevasAsignaciones.length);
+      setAlertConfig({
+        isOpen: true,
+        type: 'success',
+        title: 'Asignación Exitosa',
+        message: `El proceso ha finalizado correctamente. Se han procesado ${nuevasAsignaciones.length} nuevas asignaciones.`
+      });
     } else {
-      alert('No hay nuevas promociones aplicables para asignar en este momento. Todos los clientes válidos ya tienen sus promociones asignadas, o no cumplen las condiciones.');
+      setAlertConfig({
+        isOpen: true,
+        type: 'info',
+        title: 'Sin Novedades',
+        message: 'No hay nuevas promociones aplicables para asignar en este momento. Todos los clientes válidos ya tienen sus promociones asignadas, o no cumplen las condiciones.'
+      });
     }
   };
 
@@ -185,7 +206,7 @@ export default function Asignaciones() {
     <div>
       <h1 className="page-title" style={{ marginBottom: '2rem' }}>Asignación de promociones</h1>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="grid-4" style={{ marginBottom: '1.5rem' }}>
         <div className="card">
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#66737D', marginBottom: '0.5rem' }}>ESTADO ASIGNACIÓN</div>
           <div style={{ fontSize: '1.25rem', fontWeight: 700, color: estadoColor }}>{estadoAsignacion}</div>
@@ -210,12 +231,7 @@ export default function Asignaciones() {
           <p style={{ fontSize: '0.875rem', color: '#66737D' }}>Ejecute el motor de reglas de promoción con la base de datos actual.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FCECEB', color: '#E74C3C', border: '1px solid #E74C3C' }} onClick={async () => {
-            if(window.confirm('¿Estás seguro de reiniciar la Base de Datos a sus valores iniciales de prueba? Se borrarán todos los cambios.')) {
-              await resetDatabase();
-              window.location.reload();
-            }
-          }}>
+          <button className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#FCECEB', color: '#E74C3C', border: '1px solid #E74C3C' }} onClick={() => setConfirmReset(true)}>
              <RefreshCw size={16} /> Reiniciar BD
           </button>
           <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={ejecutarAsignaciones}>
@@ -282,6 +298,22 @@ export default function Asignaciones() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal 
+        isOpen={confirmReset} 
+        title="Restaurar Base de Datos" 
+        message="¿Estás seguro de reiniciar la Base de Datos a sus valores iniciales de prueba? Se borrarán de forma irreversible todos los cambios actuales."
+        onConfirm={handleReset}
+        onCancel={() => setConfirmReset(false)}
+      />
+
+      <AlertModal 
+        isOpen={alertConfig.isOpen}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={() => setAlertConfig({ ...alertConfig, isOpen: false })}
+      />
     </div>
   );
 }

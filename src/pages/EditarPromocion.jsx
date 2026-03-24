@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import BackButton from '../components/BackButton';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -176,19 +176,12 @@ export default function EditarPromocion() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '2rem' }}>
-      <button 
-        onClick={() => navigate('/promociones', { state: { tab: 'promociones' } })}
-        style={{ background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#212B33', fontWeight: 600, cursor: 'pointer', marginBottom: '2rem' }}
-      >
-        <ChevronLeft size={20} /> Regresar a la lista
-      </button>
-
-      <h1 className="page-title" style={{ marginBottom: '2rem' }}>Edición de Promoción</h1>
+      <BackButton fallbackPath='/promociones' fallbackState={{ tab: 'promociones' }} title="Edición de Promoción" />
 
       <div className="card">
         <h3 style={{ marginBottom: '1.5rem', color: '#212B33' }}>Información General</h3>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <div className="form-group">
             <label className="form-label">Nombre de la Promoción</label>
             <input type="text" className="form-control" value={nombre} onChange={e => setNombre(e.target.value)} />
@@ -204,7 +197,7 @@ export default function EditarPromocion() {
           <input type="text" className="form-control" value={desc} onChange={e => setDesc(e.target.value)} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="grid-2">
           <div className="form-group">
             <label className="form-label">Facturación Mínima Requerida</label>
             <input type="number" className="form-control" value={minFact} onChange={e => setMinFact(e.target.value)} />
@@ -222,11 +215,11 @@ export default function EditarPromocion() {
           El cliente debe cumplir <strong>TODOS</strong> los criterios seleccionados para recibir la promoción.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
           <FilterGroup title="Planes Comerciales Admitidos" items={ALL_PLANES} selectedItems={selectedPlanes} setSelectedItems={setSelectedPlanes} allowAll={allowAllPlanes} setAllowAll={setAllowAllPlanes} />
           <FilterGroup title="Ciudades Admitidas" items={ALL_CIUDADES} selectedItems={selectedCiudades} setSelectedItems={setSelectedCiudades} allowAll={allowAllCiudades} setAllowAll={setAllowAllCiudades} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="grid-2">
           <FilterGroup title="Actividades Económicas Admitidas" items={ALL_ACTIVIDADES} selectedItems={selectedActividades} setSelectedItems={setSelectedActividades} allowAll={allowAllActividades} setAllowAll={setAllowAllActividades} />
           <FilterGroup title="Calificaciones Financieras Admitidas" items={ALL_CALIFICACIONES} selectedItems={selectedCalificaciones} setSelectedItems={setSelectedCalificaciones} allowAll={allowAllCalificaciones} setAllowAll={setAllowAllCalificaciones} />
         </div>

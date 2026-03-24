@@ -81,7 +81,7 @@ export default function RegistrarVigencia() {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+          <div className="grid-2" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">
               <label className="form-label">Fecha de Inicio</label>
               <input type="date" className="form-control" name="fecha_inicio" required />

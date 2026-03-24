@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Search, Filter, Eye, PlusCircle, Edit2 } from 'lucide-react';
+import { Search, Filter, Eye, PlusCircle, Edit2, Trash2 } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -33,6 +34,25 @@ export default function Clientes() {
     };
   });
 
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
+
+  const promptDelete = (id) => {
+    setConfirmDelete({ isOpen: true, id });
+  };
+
+  const handleDelete = async () => {
+    const id_cliente = confirmDelete.id;
+    if (!id_cliente) return;
+    try {
+      await db.clienteAplicaPromocion.where('id_cliente').equals(id_cliente).delete();
+      await db.cliente.delete(id_cliente);
+      setConfirmDelete({ isOpen: false, id: null });
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar cliente');
+    }
+  };
+
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filterPlan, setFilterPlan] = useState('');
@@ -63,22 +83,18 @@ export default function Clientes() {
             </button>
           </div>
           {showFilters && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem', background: '#F9FAFB', padding: '1rem', borderRadius: '6px', border: '1px solid #EAEAEA' }}>
+            <div className="grid-2" style={{ marginTop: '1rem', background: '#F9FAFB', padding: '1rem', borderRadius: '6px', border: '1px solid #EAEAEA' }}>
               <select className="form-control" value={filterPlan} onChange={e => setFilterPlan(e.target.value)}>
                 <option value="">Todos los planes</option>
-                <option value="Básico">Básico</option>
-                <option value="Estándar">Estándar</option>
-                <option value="Plata">Plata</option>
-                <option value="Platino">Platino</option>
-                <option value="Premium">Premium</option>
+                {planesDB.map(p => (
+                  <option key={p.id_plan_comercial} value={p.nombre}>{p.nombre}</option>
+                ))}
               </select>
               <select className="form-control" value={filterScore} onChange={e => setFilterScore(e.target.value)}>
                 <option value="">Todas las calificaciones</option>
-                <option value="Excelente">Excelente</option>
-                <option value="Bueno">Bueno</option>
-                <option value="Regular">Regular</option>
-                <option value="Malo">Malo</option>
-                <option value="Pésimo">Pésimo</option>
+                {califsDB.map(c => (
+                  <option key={c.id_calificacion_financiera} value={c.nombre}>{c.nombre}</option>
+                ))}
               </select>
               <select className="form-control" value={filterCiudad} onChange={e => setFilterCiudad(e.target.value)}>
                 <option value="">Todas las ciudades</option>
@@ -90,10 +106,9 @@ export default function Clientes() {
               </select>
               <select className="form-control" value={filterAct} onChange={e => setFilterAct(e.target.value)}>
                 <option value="">Todas las actividades</option>
-                <option value="Residencial">Residencial</option>
-                <option value="Hospital / Salud">Hospital / Salud</option>
-                <option value="Restaurante">Restaurante</option>
-                <option value="Bar">Bar</option>
+                {actsDB.map(a => (
+                  <option key={a.id_actividad_economica} value={a.nombre}>{a.nombre}</option>
+                ))}
               </select>
             </div>
           )}
@@ -131,12 +146,21 @@ export default function Clientes() {
                 <td style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', color: '#66737D' }}>
                   <Eye cursor="pointer" size={18} title="Ver detalle" onClick={() => navigate('/clientes/detalle', { state: { id_cliente: row.id_cliente } })} />
                   <Edit2 cursor="pointer" size={18} title="Editar cliente" onClick={() => navigate('/clientes/editar', { state: { from: '/clientes', id_cliente: row.id_cliente } })} />
+                  <Trash2 cursor="pointer" size={18} title="Eliminar cliente" onClick={() => promptDelete(row.id_cliente)} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal 
+        isOpen={confirmDelete.isOpen} 
+        title="Eliminar Cliente" 
+        message="¿Está seguro de eliminar este cliente y todas sus asignaciones? Esta acción no se puede deshacer."
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Search, Filter, PlusCircle, Edit2, Trash2, Eye } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -15,6 +16,33 @@ export default function Parametros() {
   const planes = useLiveQuery(() => db.planComercial.toArray()) || [];
   const actividades = useLiveQuery(() => db.actividadEconomica.toArray()) || [];
   const calificaciones = useLiveQuery(() => db.calificacionFinanciera.toArray()) || [];
+
+  const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null });
+
+  const promptDelete = (id) => {
+    setConfirmDelete({ isOpen: true, id });
+  };
+
+  const handleDelete = async () => {
+    const id = confirmDelete.id;
+    if (!id) return;
+    try {
+      if (activeTab === 'plan') {
+        await db.promocionAdmitePlanComercial.where('id_plan_comercial').equals(id).delete();
+        await db.planComercial.delete(id);
+      } else if (activeTab === 'actividad') {
+        await db.promocionAdmiteActividadEconomica.where('id_actividad_economica').equals(id).delete();
+        await db.actividadEconomica.delete(id);
+      } else if (activeTab === 'calificacion') {
+        await db.promocionAdmiteCalificacionFinanciera.where('id_calificacion_financiera').equals(id).delete();
+        await db.calificacionFinanciera.delete(id);
+      }
+      setConfirmDelete({ isOpen: false, id: null });
+    } catch (err) {
+      console.error(err);
+      alert('Error al eliminar registro');
+    }
+  };
 
   const getTabData = () => {
     switch(activeTab) {
@@ -134,13 +162,21 @@ export default function Parametros() {
                 <td style={{ display: 'flex', gap: '1rem', color: '#66737D' }}>
                   <Eye cursor="pointer" size={18} title="Ver detalle" onClick={() => navigate(currentConfig.detailLink, { state: { id: row.id } })} />
                   <Edit2 cursor="pointer" size={18} title="Editar" onClick={() => navigate(currentConfig.editLink, { state: { id: row.id } })} />
-                  <Trash2 cursor="pointer" size={18} title="Eliminar" />
+                  <Trash2 cursor="pointer" size={18} title="Eliminar" onClick={() => promptDelete(row.id)} />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal 
+        isOpen={confirmDelete.isOpen} 
+        title="Eliminar Parámetro" 
+        message="¿Está seguro de eliminar este registro de forma permanente? Se eliminarán también las validaciones pendientes asociadas."
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import BackButton from '../components/BackButton';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
@@ -50,17 +50,10 @@ export default function RegistrarCliente() {
 
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', paddingTop: '1rem' }}>
-      <button 
-        onClick={() => navigate('/clientes')}
-        style={{ background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#212B33', fontWeight: 600, cursor: 'pointer', marginBottom: '1.5rem' }}
-      >
-        <ChevronLeft size={20} /> Regresar a la lista
-      </button>
-
-      <h1 className="page-title" style={{ marginBottom: '2rem', color: '#000' }}>Registro de Cliente</h1>
+      <BackButton fallbackPath='/clientes' fallbackState={null} title="Registro de Cliente" />
 
       <form onSubmit={handleSave}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div className="grid-3" style={{ marginBottom: '2rem' }}>
         {/* INFO PERSONAL */}
         <div className="card">
           <h4 style={{ fontSize: '0.8rem', color: '#66737D', letterSpacing: '0.5px', borderBottom: '1px solid #EAEAEA', paddingBottom: '0.5rem', marginBottom: '1rem' }}>INFORMACIÓN PERSONAL</h4>
